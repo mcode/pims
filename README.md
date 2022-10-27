@@ -1,4 +1,6 @@
-# Getting Started with Create React App
+# Pharmacy Information Management System
+
+## Build Instructions / How to start the project
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
