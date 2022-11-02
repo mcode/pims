@@ -2,7 +2,7 @@ name: Docker Image CD
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ dev, rems-286-pimsCICD ]
   workflow_dispatch:
 
 jobs:

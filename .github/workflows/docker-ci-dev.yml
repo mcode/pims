@@ -1,0 +1,17 @@
+name: Docker Image CI
+
+on:
+  push_request:
+    branches: [ dev, rems-286-pimsCICD ]
+  workflow_dispatch:
+
+jobs:
+  docker-ci: 
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      
+    - name: Test Server Docker image Builds
+      run: docker build .
