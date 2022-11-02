@@ -1,7 +1,7 @@
 name: Docker Image CI
 
 on:
-  push_request:
+  push:
     branches: [ dev, rems-286-pimsCICD ]
   workflow_dispatch:
 
