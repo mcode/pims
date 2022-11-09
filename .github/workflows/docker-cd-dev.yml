@@ -20,8 +20,8 @@ jobs:
         password: ${{ secrets.DOCKER_TOKEN }}
       
     - name: Build and push pims-ui Docker image
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v3
       with:
-        context: .
+        file: ./Dockerfile.dev
         push: true
         tags: codexrems/pims:REMSvExperimental
