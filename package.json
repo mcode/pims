@@ -21,11 +21,25 @@
     "typescript": "^4.8.4",
     "web-vitals": "^2.1.4"
   },
+  "devDependencies": {
+    "eslint": "^8.5.0",
+    "eslint-config-prettier": "^6.10.1",
+    "jest": "^27.4.5",
+    "jest-extended": "^1.2.0",
+    "json-diff": "^0.9.0",
+    "prettier": "^2.0.2",
+    "ts-jest": "^27.1.2",
+    "ts-node": "^9.1.1"
+  },
   "scripts": {
     "start": "PORT=3006 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "tsc && eslint \"**/*.{js,ts}\"",
+    "lint:fix": "tsc --noEmit && eslint \"**/*.{js,ts}\" --quiet --fix",
+    "prettier": "prettier --check \"**/*.{js,ts}\"",
+    "prettier:fix": "prettier --write \"**/*.{js,ts}\""
   },
   "eslintConfig": {
     "extends": [
