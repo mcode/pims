@@ -7,6 +7,7 @@ import Box from '@mui/material/Box';
 import NewOrders from './NewOrders/NewOrders';
 import PickedUpOrders from './PickedUpOrders/PickedUpOrders';
 import VerifiedOrders from './VerifiedOrders/VerifiedOrders';
+import { Container } from '@mui/system';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -26,7 +27,9 @@ function TabPanel(props: TabPanelProps) {
       {...other}
     >
       {value === index && (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{
+          p: 1,
+        }}>
           <Typography>{children}</Typography>
         </Box>
       )}
@@ -49,23 +52,32 @@ export default function DoctorOrders() {
   };
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <Tabs value={value} onChange={handleChange} aria-label="basic tabs example">
-          <Tab label="New Orders" {...a11yProps(0)} />
-          <Tab label="Picked Up Orders" {...a11yProps(1)} />
-          <Tab label="Verified Orders" {...a11yProps(2)} />
-        </Tabs>
+    <Container maxWidth="xl">
+      <Box sx={{
+        width: "100%",
+        border: 1,
+        borderRadius: '5px',
+        borderWidth:4,
+        borderColor: '#F1F3F4',
+
+      }}>
+        <Box sx={{ backgroundColor:"#F1F3F4", borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" centered>
+            <Tab label="New Orders" {...a11yProps(0)} />
+            <Tab label="Picked Up Orders" {...a11yProps(1)} />
+            <Tab label="Verified Orders" {...a11yProps(2)} />
+          </Tabs>
+        </Box>
+        <TabPanel value={value} index={0}>
+          <NewOrders></NewOrders>
+        </TabPanel>
+        <TabPanel value={value} index={1}>
+          <PickedUpOrders></PickedUpOrders>
+        </TabPanel>
+        <TabPanel value={value} index={2}>
+          <VerifiedOrders></VerifiedOrders>
+        </TabPanel>
       </Box>
-      <TabPanel value={value} index={0}>
-        <NewOrders></NewOrders>
-      </TabPanel>
-      <TabPanel value={value} index={1}>
-        <PickedUpOrders></PickedUpOrders>
-      </TabPanel>
-      <TabPanel value={value} index={2}>
-        <VerifiedOrders></VerifiedOrders>
-      </TabPanel>
-    </Box>
+    </Container>
   );
 }
