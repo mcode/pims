@@ -23,18 +23,15 @@ function App() {
         <div className="App">
           <Container className="NavContainer" maxWidth="xl">
             <div className="containerg">
-              <div className="a">
+              <div className="logo">
               <LocalPharmacyIcon sx={{color:'white', fontSize: 40, paddingTop:2.5, paddingRight:2.5}}/>
                 <h1>Pharmacy</h1>
-                
               </div>
-              <div className="b">
+              <div className="links">
                 <Link className="NavButtons" to="/DoctorOrders"><Button variant="contained">Doctor Orders</Button></Link>
                 <Link className="NavButtons" to="/Login"><Button variant="contained">Login</Button></Link>
               </div>
             </div>
-
-
           </Container>
         </div>
         <Routes>

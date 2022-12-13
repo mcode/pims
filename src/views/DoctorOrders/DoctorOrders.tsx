@@ -59,6 +59,7 @@ export default function DoctorOrders() {
         borderRadius: '5px',
         borderWidth:4,
         borderColor: '#F1F3F4',
+        backgroundColor: '#E7EBEF',
 
       }}>
         <Box sx={{ backgroundColor:"#F1F3F4", borderBottom: 1, borderColor: 'divider' }}>
