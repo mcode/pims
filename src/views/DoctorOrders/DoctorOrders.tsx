@@ -43,7 +43,7 @@ function a11yProps(index: number) {
 
 
 export default function DoctorOrders() {
-  const [value, setValue] = React.useState(0);
+  const [tabIndex, setValue] = React.useState(0);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -61,21 +61,32 @@ export default function DoctorOrders() {
 
       }}>
         <Box sx={{ backgroundColor: "#F1F3F4", borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" centered>
+          <Tabs value={tabIndex} onChange={handleChange} aria-label="basic tabs example" centered>
             <Tab label="New Orders" {...a11yProps(0)} />
             <Tab label="Picked Up Orders" {...a11yProps(1)} />
             <Tab label="Verified Orders" {...a11yProps(2)} />
           </Tabs>
         </Box>
-        <TabPanel value={value} index={0}>
-          <NewOrders></NewOrders>
-        </TabPanel>
-        <TabPanel value={value} index={1}>
-          <PickedUpOrders></PickedUpOrders>
-        </TabPanel>
-        <TabPanel value={value} index={2}>
-          <VerifiedOrders></VerifiedOrders>
-        </TabPanel>
+
+        <Box>
+          <Box sx={{ padding: 2 }}>
+            {tabIndex === 0 && (
+              <Box>
+                <NewOrders></NewOrders>
+              </Box>
+            )}
+            {tabIndex === 1 && (
+              <Box>
+                <PickedUpOrders></PickedUpOrders>
+              </Box>
+            )}
+            {tabIndex === 2 && (
+              <Box>
+                <VerifiedOrders></VerifiedOrders>
+              </Box>
+            )}
+          </Box>
+        </Box>
       </Box>
     </Container>
   );

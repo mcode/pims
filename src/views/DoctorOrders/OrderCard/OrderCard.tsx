@@ -2,11 +2,12 @@ import { Box, Button, Card, CardActions, CardContent, Paper, Table, TableBody, T
 import './OrderCard.css';
 import JsonData from '../data.json'; // This file will be deleted once the api is fully implemented
 
+
 export default function OrderCard() {
   return (
-    <Card>
+    <Card sx={{bgcolor:'#F5F5F7'}}>
       {JsonData.map((row) =>
-        <Card sx={{ minWidth: 275, mb: '10px' }}>
+        <Card key={row.caseNumber} sx={{ minWidth: 275, margin: 2, boxShadow: '10px'}}>
           <CardContent>
             <Box>
               <Typography variant="h5" component="div">

@@ -37,14 +37,12 @@ function App() {
         <Routes>
           {/* Initial load to login page, will need to change to check for user authentication to load to correct page  */}
           <Route path="/" element={<Login />} />
-
           <Route path='/Login' element={< Login />}></Route>
           <Route path='/DoctorOrders' element={< DoctorOrders />}></Route>
         </Routes>
       </Router>
     </Box >
-
-  );
+  ); 
 }
 
 export default App;
