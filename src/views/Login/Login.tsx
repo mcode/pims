@@ -1,17 +1,9 @@
-
-
-import * as React from 'react';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import config from '../../config.json';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { Avatar, Box, Button, Container, CssBaseline, TextField, Typography } from '@mui/material';
 import axios from 'axios';
+import * as React from 'react';
+import config from '../../config.json';
 
 export default function Login() {
   const [token, setToken] = React.useState<String | null>(null)

@@ -1,13 +1,10 @@
+import { Box, Tab, Tabs, Typography } from '@mui/material';
+import { Container } from '@mui/system';
 import React from 'react';
 import './DoctorOrders.css';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
 import NewOrders from './NewOrders/NewOrders';
 import PickedUpOrders from './PickedUpOrders/PickedUpOrders';
 import VerifiedOrders from './VerifiedOrders/VerifiedOrders';
-import { Container } from '@mui/system';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -44,6 +41,7 @@ function a11yProps(index: number) {
   };
 }
 
+
 export default function DoctorOrders() {
   const [value, setValue] = React.useState(0);
 
@@ -57,12 +55,12 @@ export default function DoctorOrders() {
         width: "100%",
         border: 1,
         borderRadius: '5px',
-        borderWidth:4,
+        borderWidth: 4,
         borderColor: '#F1F3F4',
         backgroundColor: '#E7EBEF',
 
       }}>
-        <Box sx={{ backgroundColor:"#F1F3F4", borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ backgroundColor: "#F1F3F4", borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={value} onChange={handleChange} aria-label="basic tabs example" centered>
             <Tab label="New Orders" {...a11yProps(0)} />
             <Tab label="Picked Up Orders" {...a11yProps(1)} />
