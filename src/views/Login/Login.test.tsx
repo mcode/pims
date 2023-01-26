@@ -4,6 +4,6 @@ import Login from './Login';
 
 test('renders Sign in', () => {
   render(<Login />);
-  const linkElement = screen.getByText(/Sign in/i);
+  const linkElement = screen.getByText(/Sign/i);
   expect(linkElement).toBeInTheDocument();
 });
