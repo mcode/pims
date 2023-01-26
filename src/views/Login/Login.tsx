@@ -1,25 +1,17 @@
-
-
-import * as React from 'react';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import config from '../../config.json'
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { Avatar, Box, Button, Container, CssBaseline, TextField, Typography } from '@mui/material';
 import axios from 'axios';
+import * as React from 'react';
+import config from '../../config.json';
 
 export default function Login() {
-  const [token, setToken] = React.useState<String | null>(null)
+  const [token, setToken] = React.useState<string | null>(null);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const user = data.get('username')?.toString()
-    const pass = data.get('password')?.toString()
+    const user = data.get('username')?.toString();
+    const pass = data.get('password')?.toString();
     if (user && pass) {
       const params = new URLSearchParams();
       params.append('username', user);
@@ -34,25 +26,24 @@ export default function Login() {
         )
         .then((result) => {
           // do something with the token
-          const scope = result.data.scope.split(' ').includes(config.scopeId)
+          const scope = result.data.scope.split(' ').includes(config.scopeId);
           if (scope) {
-            setToken(result.data.access_token)
+            setToken(result.data.access_token);
           } else {
-            console.error("Unauthorized User")
+            console.error('Unauthorized User');
           }
         })
         .catch(err => {
           if (err.response.status === 401) {
-            console.error("Unknown user")
+            console.error('Unknown user');
           } else {
-            console.error(err)
+            console.error(err);
           }
         });
     }
   };
 
   return (
-
     <Container component="main" maxWidth="xs">
       <CssBaseline />
       <Box

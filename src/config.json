@@ -3,6 +3,4 @@
     "client": "pims-login",
     "auth": "http://localhost:8180/auth",
     "scopeId": "pims"
-
   }
-  
