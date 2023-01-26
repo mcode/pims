@@ -4,6 +4,6 @@ import DoctorOrders from './DoctorOrders';
 
 test.skip('renders learn react link', () => {
   render(<DoctorOrders />);
-  const linkElement = screen.getByText(/learn react/i);
+  const linkElement = screen.getByText("Pharmacy");
   expect(linkElement).toBeInTheDocument();
 });

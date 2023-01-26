@@ -4,6 +4,6 @@ import OrderCard from './OrderCard';
 
 test('renders learn react link', () => {
   render(<OrderCard />);
-  const linkElement = screen.getByText(/learn react/i);
+  const linkElement = screen.getByText("Pharmacy");
   expect(linkElement).toBeInTheDocument();
 });

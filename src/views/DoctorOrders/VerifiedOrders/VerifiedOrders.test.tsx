@@ -4,6 +4,6 @@ import VerifiedOrders from './VerifiedOrders';
 
 test('renders learn react link', () => {
   render(<VerifiedOrders />);
-  const linkElement = screen.getByText(/learn react/i);
+  const linkElement = screen.getByText("Pharmacy");
   expect(linkElement).toBeInTheDocument();
 });
