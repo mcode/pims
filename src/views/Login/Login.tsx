@@ -6,12 +6,12 @@ import * as React from 'react';
 import config from '../../config.json';
 
 export default function Login() {
-  const [token, setToken] = React.useState<String | null>(null)
+  const [token, setToken] = React.useState<string | null>(null);
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const user = data.get('username')?.toString()
-    const pass = data.get('password')?.toString()
+    const user = data.get('username')?.toString();
+    const pass = data.get('password')?.toString();
     if (user && pass) {
       const params = new URLSearchParams();
       params.append('username', user);
@@ -26,18 +26,18 @@ export default function Login() {
         )
         .then((result) => {
           // do something with the token
-          const scope = result.data.scope.split(' ').includes(config.scopeId)
+          const scope = result.data.scope.split(' ').includes(config.scopeId);
           if (scope) {
-            setToken(result.data.access_token)
+            setToken(result.data.access_token);
           } else {
-            console.error("Unauthorized User")
+            console.error('Unauthorized User');
           }
         })
         .catch(err => {
           if (err.response.status === 401) {
-            console.error("Unknown user")
+            console.error('Unknown user');
           } else {
-            console.error(err)
+            console.error(err);
           }
         });
     }

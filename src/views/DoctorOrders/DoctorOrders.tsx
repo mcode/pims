@@ -52,7 +52,7 @@ export default function DoctorOrders() {
   return (
     <Container maxWidth="xl">
       <Box sx={{
-        width: "100%",
+        width: '100%',
         border: 1,
         borderRadius: '5px',
         borderWidth: 4,
@@ -60,7 +60,7 @@ export default function DoctorOrders() {
         backgroundColor: '#E7EBEF',
 
       }}>
-        <Box sx={{ backgroundColor: "#F1F3F4", borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ backgroundColor: '#F1F3F4', borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabIndex} onChange={handleChange} aria-label="basic tabs example" centered>
             <Tab label="New Orders" {...a11yProps(0)} />
             <Tab label="Picked Up Orders" {...a11yProps(1)} />
