@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 import {
   BrowserRouter as Router,
@@ -15,6 +14,9 @@ import { Container, Stack } from '@mui/system';
 import { red } from '@mui/material/colors';
 import LocalPharmacyIcon from '@mui/icons-material/LocalPharmacy';
 
+import Login from './views/Login/Login';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './styles/theme'
 
 function App() {
   return (
