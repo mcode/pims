@@ -1,0 +1,65 @@
+<Message>
+    <Header>
+        <MessageID>1675064515782</MessageID>
+    </Header>
+    <Body>
+        <NewRx>
+            <Patient>
+                <HumanPatient>
+                    <Names>
+                        <Name>
+                            <LastName>Snoww</LastName>
+                            <FirstName>Jon</FirstName>
+                        </Name>
+                    </Names>
+                    <DateOfBirth>
+                        <Date>1996-06-01</Date>
+                    </DateOfBirth>
+                </HumanPatient>
+            </Patient>
+            <Prescriber>
+                <NonVeterinarian>
+                    <Identification>
+                        <NPI>1122334455</NPI>
+                    </Identification>
+                    <Names>
+                        <Name>
+                            <LastName>Doe</LastName>
+                            <FirstName>Jane</FirstName>
+                        </Name>
+                    </Names>
+                    <Address>
+                        <AddressLine1>840 Seneca St</AddressLine1>
+                        <City>Buffalo</City>
+                        <StateProvince>NY</StateProvince>
+                        <PostalCode>14210</PostalCode>
+                        <Country>
+                            US</Country>
+                    </Address>
+                    <CommunicationNumbers>
+                        <PrimaryTelephone>
+                            <Number>716-873-1557</Number>
+                        </PrimaryTelephone>
+                        <ElectronicMail>jane.betty@myhospital.com</ElectronicMail>
+                    </CommunicationNumbers>
+                </NonVeterinarian>
+            </Prescriber>
+            <MedicationPrescribed>
+                <DrugDescription>Isotretinoin 200 MG
+                    Oral Capsule</DrugDescription>
+                <Product>
+                    <DrugCoded>
+                        <ProductCode>
+                            <Code>6064</Code>
+                            <Qualifier>
+                                http://www.nlm.nih.gov/research/umls/rxnorm</Qualifier>
+                        </ProductCode>
+                    </DrugCoded>
+                </Product>
+                <Quantity>
+                    <Value>90</Value>
+                </Quantity>
+            </MedicationPrescribed>
+        </NewRx>
+    </Body>
+</Message>

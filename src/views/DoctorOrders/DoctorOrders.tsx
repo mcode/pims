@@ -5,6 +5,8 @@ import './DoctorOrders.css';
 import NewOrders from './NewOrders/NewOrders';
 import PickedUpOrders from './PickedUpOrders/PickedUpOrders';
 import VerifiedOrders from './VerifiedOrders/VerifiedOrders';
+import axios from 'axios';
+
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -48,6 +50,18 @@ export default function DoctorOrders() {
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
+
+  // // Get doctorOrder from dataBase
+  // const CASENUMBER = 1675064515782;
+  // let prescription = {};
+
+  // axios.get('/doctorOrders/api/getRx')
+  // .then(function (response){
+
+  //   console.log('Prescription: ');
+  //   console.log(response.data[CASENUMBER]);
+  //   prescription = response.data[CASENUMBER];
+  // });
 
   return (
     <Container maxWidth="xl">

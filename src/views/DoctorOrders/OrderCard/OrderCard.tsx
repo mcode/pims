@@ -1,13 +1,102 @@
 import { Box, Button, Card, CardActions, CardContent, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import './OrderCard.css';
 import JsonData from '../data.json'; // This file will be deleted once the api is fully implemented
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+
+// type DoctorOrder = {
+//   caseNumber: string;
+//   patientName: string;
+//   patientDOB: string;
+//   doctorName: string;
+//   doctorContact: string;
+//   doctorID: string;
+//   doctorEmail: string;
+//   drugNames: string;
+//   drugPrice: number;
+//   quanitities: string;
+//   total: number;
+//   pickupDate: string;
+//   dispenseStatus: string;
+// };
+
+// type AllDoctorOrder = {
+//     id: string;
+//     doctorOrder: DoctorOrder[];
+// }
+
+// async function getDoctorOrders(): Promise<DoctorOrder>{
+//   const response = await axios.get<DoctorOrder>('/doctorOrders/api/getRx');
+//   console.log(response.data);
+//   return response.data;
+// }
 
 
 export default function OrderCard() {
+  // const [post, setPost] = useState(null);
+
+  // let temp;
+  // useEffect(() => {
+  //   axios.get('/doctorOrders/api/getRx')
+  //   .then((response) => {
+  //     setPost(response.data);
+  //     console.log(response.data);
+  //     something(response.data);
+  //   });
+  // }, []);
+
+  // if (!post) return null;
+
+  // const something: (arg0: any) => void(data: any){
+  //   console.log(data);
+  // }
+
+
+  // const [doctorOrder, setDoctorOrders] = useState<[] | DoctorOrder[]>([]);
+
+  // useEffect(() => {
+  //   (async () => {
+  //     const doctorOrder = await getDoctorOrders();
+  //     setDoctorOrders(doctorOrder[1675064515782]);
+  //     console.log(doctorOrder);
+  //   })();
+  // }, []);
+
+  // console.log(doctorOrder);
+
+  // return (
+  //   <Card>
+  //     <h1>orders: {doctorOrder[1675064515782]}</h1>
+
+  //       <ul>
+  //         {doctorOrder.map((doctorOrder: DoctorOrder) => (
+  //           <li>one</li>
+  //         ))}
+  //       </ul>
+
+  //   </Card>
+  // );
+
+  // Get doctorOrder from dataBase
+  const CASENUMBER = 1675064515782;
+  let prescription = {};
+
+  const getAllDoctorOrders = () => {
+    axios.get('/doctorOrders/api/getRx')
+    .then(function (response){
+
+      console.log('Prescription: ');
+      console.log(response.data[CASENUMBER]);
+      prescription = response.data[CASENUMBER];
+    })
+    .catch(error => console.error('Error: $(error'));
+  };
+  getAllDoctorOrders();
+
   return (
-    <Card sx={{bgcolor:'#F5F5F7'}}>
+    <Card sx={{ bgcolor: '#F5F5F7' }}>
       {JsonData.map((row) =>
-        <Card key={row.caseNumber} sx={{ minWidth: 275, margin: 2, boxShadow: '10px'}}>
+        <Card key={row.caseNumber} sx={{ minWidth: 275, margin: 2, boxShadow: '10px' }}>
           <CardContent>
             <Box>
               <Typography variant="h5" component="div">
