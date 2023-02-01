@@ -2,4 +2,5 @@ FROM node:14-alpine
 WORKDIR /home/node/app/pims
 COPY --chown=node:node . .
 RUN npm install
+RUN npm install npm-run-all --save-dev
 CMD npm run start
