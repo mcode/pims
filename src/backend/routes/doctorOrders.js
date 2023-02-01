@@ -3,7 +3,7 @@ const router = express.Router();
 
 
 //database
-const DATABASE = '/Users/zrobin/dev/REMS/drlsroot/pims/src/backend/database/database.js';
+const DATABASE = '../database/database.js';
 const database = require(DATABASE); // replace me with correct database
 
 // XML Parsing Middleware
