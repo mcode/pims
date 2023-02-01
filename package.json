@@ -41,7 +41,7 @@
   "scripts": {
     "startFrontend": "PORT=5050 react-scripts start",
     "startBackend": "node ./src/backend/server.js",
-    "start": "npm-run-all --parallel startBackend buildFrontend",
+    "start": "npm-run-all --parallel startBackend startFrontend",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
