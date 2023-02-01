@@ -51,7 +51,7 @@ router.post("/api/addRx", (req, res, next) => {
         dispenseStatus } = parseNCPDPScript(req.body)
 
     // Storing the data in the database will be replaced with mongodb 
-    database[caseNumber] = {
+    database.push({
         caseNumber,
         patientName,
         patientDOB,
@@ -65,11 +65,11 @@ router.post("/api/addRx", (req, res, next) => {
         total,
         pickupDate,
         dispenseStatus
-    }
+    });
 
     console.log("POST DoctorOrder: ");
-    console.log(database[caseNumber]);
-    res.send(database[caseNumber]);
+    console.log(database);
+    res.send(database);
 })
 
 /**
@@ -80,8 +80,8 @@ router.get('/api/getRx/:caseNumber', (req, res) => {
     const id = req.params.caseNumber;
 
     console.log("GET DoctorOrder: ");
-    console.log(database[id]);
-    res.json(database[id]);
+    console.log(database);
+    res.json(database);
 });
 
 /**
