@@ -8,32 +8,33 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Slide from '@mui/material/Slide';
 import { TransitionProps } from '@mui/material/transitions';
 import { Box, Typography } from '@mui/material';
+import axios from 'axios';
+import { useState } from 'react';
 
-//Delete me 
-const tempData = [
-  {
-    stakeholderId: 'Patient/pat017',
-    completed: true,
-    metRequirementId: '63e537032f410a5ad56cf302',
-    requirementName: 'Patient Enrollment',
-    requirementDescription: 'Submit Patient Enrollment form to the REMS Administrator'
-  },
-  {
-    stakeholderId: 'Practitioner/pra1234',
-    completed: true,
-    metRequirementId: '63e537032f410a5ad56cf303',
-    requirementName: 'Prescriber Enrollment',
-    requirementDescription: 'Submit Prescriber Enrollment form to the REMS Administrator'
-  },
-  {
-    stakeholderId: 'Organization/pharm0111',
-    completed: true,
-    metRequirementId: '63e536c52f410a5ad56cf301',
-    requirementName: 'Pharmacist Enrollment',
-    requirementDescription: null
-  }
-];
 
+interface DoctorOrder {
+  caseNumber?: string;
+  patientName?: string;
+  patientDOB?: string;
+  doctorName?: string;
+  doctorContact?: string;
+  doctorID?: string;
+  doctorEmail?: string;
+  drugNames?: string;
+  drugPrice?: number;
+  quanitities?: string;
+  total?: number;
+  pickupDate?: string;
+  dispenseStatus?: string;
+  metRequirements: {
+    stakeholderId: string,
+    completed: boolean,
+    metRequirementId: string,
+    requirementName: string,
+    requirementDescription: string,
+    _id: string
+  }[]
+}
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -44,11 +45,23 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction='up' ref={ref} {...props} />;
 });
 
-export default function EtasuPopUp() {
+const EtasuPopUp = (props: any) => {
   const [open, setOpen] = React.useState(false);
+
+
+  const [doctorOrder, getDoctorOrders] = useState<DoctorOrder>();
 
   const handleClickOpen = () => {
     setOpen(true);
+     // call api endpoint to update
+     const url = '/doctorOrders/api/updateRx/' + props.data._id; 
+     axios.patch(url)
+     .then(function (response) {
+      const DoctorOrders = response.data;
+      //Adding data to state
+      getDoctorOrders(DoctorOrders);
+     })
+     .catch(error => console.error('Error: $(error'));
   };
 
   const handleClose = () => {
@@ -71,8 +84,12 @@ export default function EtasuPopUp() {
         <DialogContent>
           <DialogContentText id='alert-dialog-slide-description'>
             <Box>
-              {tempData.map((etasuElement) => 
-                <Box key={etasuElement.stakeholderId}>
+              {/* this is the property that holds the metRequirments */}
+              {/* <h1>{(props.data.metRequements.length >0) ? 'requirments found' :'no requirments found'}</h1> */}
+
+
+              {doctorOrder?.metRequirements.map((etasuElement) => 
+                <Box key={etasuElement._id}>
                   <Typography>{etasuElement.requirementName}</Typography>
                   <Typography>{etasuElement.completed ? '✅'  : '❌'}</Typography>
                 </Box>
@@ -86,4 +103,6 @@ export default function EtasuPopUp() {
       </Dialog>
     </div>
   );
-}
+};
+
+export default EtasuPopUp;

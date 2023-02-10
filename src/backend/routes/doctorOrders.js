@@ -54,19 +54,47 @@ router.post('/api/addRx', async (req, res) => {
  * Description : 'Updates prescription based on mongo id'
  */
 router.patch('/api/updateRx/:id', async (req, res) => {
-    const order = await doctorOrder.findById(req.params.id).exec();
+    try {
+        // Finding by id
+        const order = await doctorOrder.findById(req.params.id).exec();
+        console.log("found by id!");
 
-    const url = 'http://rems-administrator:8090/etasu/met/patient/' + 'Jon Snow' + '/drug/' + 'Isotretinoin';
+        // Reaching out to REMS Admin finding by pt name and drug name 
+        const url = 'http://rems-administrator:8090/etasu/met/patient/' + order.patientName + '/drug/' + order.simpleDrugName;
+        console.log(url);
+        const response = await axios.get(url);
+        console.log(response);
 
-    const response = await axios.get(url);
+        // Saving and updating
+        const newOrder = await doctorOrder.findOneAndUpdate({ id: req.params.id }, { dispenseStatus: response.data.status, metRequirements: response.data.metRequirements }, {
+            new: true
+        });
+        console.log(newOrder);
+        res.send(newOrder);
 
-    // Updating status to match REMS Admin
-    const newOrder = await doctorOrder.findOneAndUpdate({id: req.params.id}, {dispenseStatus: response.data.status, metRequirements:response.data.metRequirements}, {
-        new: true
-    });
-        
-    console.log(newOrder);
-    res.send(newOrder);
+    } catch (error) {
+        console.log('ERROR!');
+        return error;
+    }
+});
+
+
+/**
+ * Route: 'doctorOrders//api/updateRx/:id/pickedUp'
+ * Description : 'Updates prescription dispense status based on mongo id to be picked up '
+ */
+router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
+    try {
+        const newOrder = await doctorOrder.findOneAndUpdate({ id: req.params.id }, { dispenseStatus: 'Picked Up' }, {
+            new: true
+        });
+    } catch (error) {
+        console.log('ERROR! Could not find id');
+        return error;
+    }
+
+    // console.log(newOrder);
+    // res.send(newOrder);
 });
 
 /**
@@ -74,7 +102,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
  * Description : 'Fetches doctor order bases on patientName and Drug name'
  */
 router.get('/api/getRx/patient/:patientName/drug/:simpleDrugName', async (req, res) => {
-    
+
     const prescription = await doctorOrder.findOne({ patientName: req.params.patientName, simpleDrugName: req.params.simpleDrugName }).exec();
 
     console.log('GET DoctorOrder: ');
