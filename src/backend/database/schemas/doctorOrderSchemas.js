@@ -9,11 +9,19 @@ const orderSchema = new mongoose.Schema({
     doctorID: String,
     doctorEmail: String,
     drugNames: String,
+    simpleDrugName: String,
     drugPrice: Number,
     quanitities: String,
     total: Number,
     pickupDate: String,
-    dispenseStatus: String
+    dispenseStatus: String,
+    metRequirements: [{
+        stakeholderId: String,
+        completed: Boolean,
+        metRequirementId: String,
+        requirementName: String,
+        requirementDescription:String
+    }]
 });
 
 // Compound index is used to prevent duplicates based off of the given parameters

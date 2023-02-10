@@ -34,8 +34,8 @@ export default function DoctorOrders() {
         <Box sx={{ backgroundColor: '#F1F3F4', borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={tabIndex} onChange={handleChange} aria-label="basic tabs example" centered>
             <Tab label="New Orders" {...a11yProps(0)} />
-            <Tab label="Picked Up Orders" {...a11yProps(1)} />
-            <Tab label="Verified Orders" {...a11yProps(2)} />
+            <Tab label="Verified Up Orders" {...a11yProps(1)} />
+            <Tab label="Picked Orders" {...a11yProps(2)} />
           </Tabs>
         </Box>
 
@@ -48,12 +48,12 @@ export default function DoctorOrders() {
             )}
             {tabIndex === 1 && (
               <Box>
-                <PickedUpOrders></PickedUpOrders>
+                <VerifiedOrders></VerifiedOrders>
               </Box>
             )}
             {tabIndex === 2 && (
               <Box>
-                <VerifiedOrders></VerifiedOrders>
+                <PickedUpOrders></PickedUpOrders>
               </Box>
             )}
           </Box>

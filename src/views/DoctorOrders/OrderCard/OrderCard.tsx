@@ -2,8 +2,9 @@ import { Box, Button, Card, CardActions, CardContent, Paper, Table, TableBody, T
 import './OrderCard.css';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import EtasuPopUp from './EtasuPopUp/EtasuPopUp';
 
-type DoctorOrder = {
+interface DoctorOrder  {
   caseNumber?: string;
   patientName?: string;
   patientDOB?: string;
@@ -17,7 +18,14 @@ type DoctorOrder = {
   total?: number;
   pickupDate?: string;
   dispenseStatus?: string;
-};
+  metRequirements?: {
+    stakeholderId: string,
+    completed: boolean,
+    metRequirementId: string,
+    requirementName: string,
+    requirementDescription: string
+  }[]
+}
 
 
 export default function OrderCard() {
@@ -66,9 +74,9 @@ export default function OrderCard() {
                 <Typography color="text.secondary">
                   DOB: {row.patientDOB}
                 </Typography>
-                <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                {/* <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
                   Case # {row.caseNumber}
-                </Typography>
+                </Typography> */}
                 <Typography sx={{ mb: 2 }} variant="h6">
                   {row.drugNames}
                 </Typography>
@@ -106,13 +114,15 @@ export default function OrderCard() {
             </CardContent>
             <CardActions>
               <Box sx={{ marginLeft: 'auto', mr: '8px' }}>
-                <Button variant="outlined" size="small" sx={{ mr: '10px' }}>View ETASU</Button>
+                {/* <Button variant="outlined" size="small" sx={{ mr: '10px' }}>View ETASU</Button> */}
+                <EtasuPopUp />
                 <Button variant="contained" size="small" >Verify Order</Button>
+
               </Box>
             </CardActions>
           </Card>
         )}
-        <Box  sx={{ marginLeft: 'auto', m: '8px',  display:'flex', justifyContent:'center', alignItems: 'center'}}>
+        <Box sx={{ marginLeft: 'auto', m: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
           <Button onClick={deleteAll} variant="outlined" color="error" size="small" sx={{ mr: '10px' }}>Remove All</Button>
         </Box>
       </Card>

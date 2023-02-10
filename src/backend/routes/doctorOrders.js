@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const doctorOrder = require('../database/schemas/doctorOrderSchemas.js');
+const axios = require('axios');
 
 // XML Parsing Middleware used for NCPDP SCRIPT 
 const bodyParser = require('body-parser');
@@ -19,9 +20,9 @@ router.use(bodyParser.urlencoded({ extended: false }));
  * Route: 'doctorOrders/api/getRx'
  * Description : 'Returns all documents in database for PIMS'
  */
-router.get('/api/getRx', async(req, res) => {
+router.get('/api/getRx', async (req, res) => {
     //  finding all and adding it to the db 
-    const order = await doctorOrder.find(); 
+    const order = await doctorOrder.find();
 
     console.log('Database return: ');
     console.log(order);
@@ -45,20 +46,41 @@ router.post('/api/addRx', async (req, res) => {
 
     console.log('POST DoctorOrder: ');
     console.log(newOrder);
-    res.send(newOrder); 
+    res.send(newOrder);
 });
 
 /**
- * Route : 'doctorOrders/api/getRx/:caseNumber`
- * Description : 'Fetches doctor order bases on caseNumber'
+ * Route: 'doctorOrders/api/updateRx/:_id'
+ * Description : 'Updates prescription based on mongo id'
  */
-// router.get('/api/getRx/:caseNumber', (req, res) => {
-//     const id = req.params.caseNumber;
+router.patch('/api/updateRx/:id', async (req, res) => {
+    const order = await doctorOrder.findById(req.params.id).exec();
 
-//     console.log('GET DoctorOrder: ');
-//     console.log(database);
-//     res.json(database);
-// });
+    const url = 'http://rems-administrator:8090/etasu/met/patient/' + 'Jon Snow' + '/drug/' + 'Isotretinoin';
+
+    const response = await axios.get(url);
+
+    // Updating status to match REMS Admin
+    const newOrder = await doctorOrder.findOneAndUpdate({id: req.params.id}, {dispenseStatus: response.data.status, metRequirements:response.data.metRequirements}, {
+        new: true
+    });
+        
+    console.log(newOrder);
+    res.send(newOrder);
+});
+
+/**
+ * Route : 'doctorOrders/api/getRx/patient/:patientName/drug/:simpleDrugName`
+ * Description : 'Fetches doctor order bases on patientName and Drug name'
+ */
+router.get('/api/getRx/patient/:patientName/drug/:simpleDrugName', async (req, res) => {
+    
+    const prescription = await doctorOrder.findOne({ patientName: req.params.patientName, simpleDrugName: req.params.simpleDrugName }).exec();
+
+    console.log('GET DoctorOrder: ');
+    console.log(prescription);
+    res.send(prescription);
+});
 
 /**
  * Description : 'Deletes all documents and prescriptions in PIMS'
@@ -86,11 +108,13 @@ function parseNCPDPScript(newRx) {
         doctorID: newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Identification.NPI,
         doctorEmail: newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
         drugNames: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription,
+        simpleDrugName: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription.split(' ')[0],
         drugPrice: 200, // Add later?
         quanitities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
         total: 1800,
         pickupDate: 'Tue Dec 13 2022', // Add later?
-        dispenseStatus: 'Pending'
+        dispenseStatus: 'Pending',
+        metRequirements: [] // will fill later
     });
 
     return newOrder;
