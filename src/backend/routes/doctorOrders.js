@@ -51,7 +51,7 @@ router.post('/api/addRx', async (req, res) => {
 
 /**
  * Route: 'doctorOrders/api/updateRx/:_id'
- * Description : 'Updates prescription based on mongo id'
+ * Description : 'Updates prescription based on mongo id, used in etasu'
  */
 router.patch('/api/updateRx/:id', async (req, res) => {
     try {
@@ -63,17 +63,19 @@ router.patch('/api/updateRx/:id', async (req, res) => {
         const url = 'http://rems-administrator:8090/etasu/met/patient/' + order.patientName + '/drug/' + order.simpleDrugName;
         console.log(url);
         const response = await axios.get(url);
-        console.log(response);
+        console.log(response.data);
 
         // Saving and updating
-        const newOrder = await doctorOrder.findOneAndUpdate({ id: req.params.id }, { dispenseStatus: response.data.status, metRequirements: response.data.metRequirements }, {
+        const newOrder = await doctorOrder.findOneAndUpdate({ _id: req.params.id }, { dispenseStatus: response.data.status, metRequirements: response.data.metRequirements }, {
             new: true
         });
+        console.log("NEWORDER");
         console.log(newOrder);
         res.send(newOrder);
 
     } catch (error) {
         console.log('ERROR!');
+        console.log(error);
         return error;
     }
 });
@@ -85,7 +87,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
  */
 router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
     try {
-        const newOrder = await doctorOrder.findOneAndUpdate({ id: req.params.id }, { dispenseStatus: 'Picked Up' }, {
+        const newOrder = await doctorOrder.findOneAndUpdate({ _id: req.params.id }, { dispenseStatus: 'Picked Up' }, {
             new: true
         });
     } catch (error) {
