@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { Box, Typography } from '@mui/material';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -7,8 +7,8 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Slide from '@mui/material/Slide';
 import { TransitionProps } from '@mui/material/transitions';
-import { Box, Typography } from '@mui/material';
 import axios from 'axios';
+import * as React from 'react';
 import { useState } from 'react';
 
 
@@ -69,7 +69,7 @@ const EtasuPopUp = (props: any) => {
   };
 
   return (
-    <div>
+    <Box>
       <Button variant='outlined' size='small' onClick={handleClickOpen}>
         VIEW ETASU
       </Button>
@@ -82,16 +82,12 @@ const EtasuPopUp = (props: any) => {
       >
         <DialogTitle>{'Elements to Assure Safe Use (ETASU)'}</DialogTitle>
         <DialogContent>
-          <DialogContentText id='alert-dialog-slide-description'>
+          <DialogContentText component='div' id='alert-dialog-slide-description'>
             <Box>
-              {/* this is the property that holds the metRequirments */}
-              {/* <h1>{(props.data.metRequements.length >0) ? 'requirments found' :'no requirments found'}</h1> */}
-
-
               {doctorOrder?.metRequirements.map((etasuElement) => 
                 <Box key={etasuElement._id}>
-                  <Typography>{etasuElement.requirementName}</Typography>
-                  <Typography>{etasuElement.completed ? '✅'  : '❌'}</Typography>
+                  <Typography component='div'>{etasuElement.requirementName}</Typography>
+                  <Typography component='div'>{etasuElement.completed ? '✅'  : '❌'}</Typography>
                 </Box>
               )}
             </Box>
@@ -101,7 +97,7 @@ const EtasuPopUp = (props: any) => {
           <Button onClick={handleClose}>Close</Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 };
 

@@ -44,7 +44,7 @@ export default function Login() {
   };
 
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component='main' maxWidth='xs'>
       <CssBaseline />
       <Box
         sx={{
@@ -63,32 +63,32 @@ export default function Login() {
             <LockOutlinedIcon />
           </Avatar>
         }
-        <Typography component="h1" variant="h5">
+        <Typography component='h1' variant='h5'>
           Sign in
         </Typography>
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+        <Box component='form' onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           <TextField
-            margin="normal"
+            margin='normal'
             fullWidth
-            id="email"
-            label="Username"
-            name="username"
-            autoComplete="username"
+            id='email'
+            label='Username'
+            name='username'
+            autoComplete='username'
             autoFocus
           />
           <TextField
-            margin="normal"
+            margin='normal'
             fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
+            name='password'
+            label='Password'
+            type='password'
+            id='password'
+            autoComplete='current-password'
           />
           <Button
-            type="submit"
+            type='submit'
             fullWidth
-            variant="contained"
+            variant='contained'
             sx={{ mt: 3, mb: 2 }}
           >
             Sign In

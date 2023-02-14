@@ -3,7 +3,7 @@ import './NewOrders.css';
 
 const NewOrders = () => {
   return (
-    <div className="NewOrders">
+    <div className='NewOrders'>
       <h1>NewOrders</h1>
       <OrderCard tabStatus = {'Pending'}/>
     </div>

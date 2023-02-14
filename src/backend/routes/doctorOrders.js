@@ -57,7 +57,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     try {
         // Finding by id
         const order = await doctorOrder.findById(req.params.id).exec();
-        console.log("found by id!");
+        console.log('found by id!');
 
         // Reaching out to REMS Admin finding by pt name and drug name 
         const url = 'http://rems-administrator:8090/etasu/met/patient/' + order.patientName + '/drug/' + order.simpleDrugName;
@@ -69,7 +69,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
         const newOrder = await doctorOrder.findOneAndUpdate({ _id: req.params.id }, { dispenseStatus: response.data.status, metRequirements: response.data.metRequirements }, {
             new: true
         });
-        console.log("NEWORDER");
+        console.log('NEWORDER');
         console.log(newOrder);
         res.send(newOrder);
 

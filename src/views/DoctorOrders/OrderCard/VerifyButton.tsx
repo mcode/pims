@@ -1,15 +1,5 @@
-import * as React from 'react';
 import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import Slide from '@mui/material/Slide';
-import { TransitionProps } from '@mui/material/transitions';
-import { Box, Typography } from '@mui/material';
 import axios from 'axios';
-import { useState } from 'react';
 
 
 interface DoctorOrder {
@@ -51,7 +41,7 @@ const VerifyButton = (props: any) => {
     };
 
     return (
-        <Button variant="contained" size="small" onClick={verifyOrder}>Verify Order</Button>
+        <Button variant='contained' size='small' onClick={verifyOrder}>Verify Order</Button>
     );
 };
 

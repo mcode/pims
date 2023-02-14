@@ -1,12 +1,10 @@
 import { Box, Button, Card, CardActions, CardContent, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
-import './OrderCard.css';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import EtasuPopUp from './EtasuPopUp/EtasuPopUp';
-import { render } from 'react-dom';
-import React from 'react';
-import VerifyButton from './VerifyButton';
+import './OrderCard.css';
 import PickedUpButton from './PickedUpButton';
+import VerifyButton from './VerifyButton';
 
 interface DoctorOrder {
   caseNumber?: string;
@@ -74,46 +72,46 @@ const OrderCard = (props: any) => {
             {(props.tabStatus == row.dispenseStatus) ?
               <Card>
                 <CardContent>
-                  <Box>
-                    <Typography variant="h5" component="div">
+                    <Box>
+                     <Typography variant='h5' component='div'>
                       {row.patientName}
                     </Typography>
-                    <Typography color="text.secondary">
+                    <Typography variant='h5' component='div' color='text.secondary'>
                       DOB: {row.patientDOB}
                     </Typography>
-                    {/* <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                    {/* <Typography sx={{ fontSize: 14 }} color='text.secondary' gutterBottom>
                   Case # {row.caseNumber}
                 </Typography> */}
-                    <Typography sx={{ mb: 2 }} variant="h6">
+                    <Typography component='div' sx={{ mb: 2 }} variant='h6'>
                       {row.drugNames}
-                    </Typography>
-                  </Box>
+                    </Typography> 
+                  </Box> 
                   <TableContainer component={Paper}>
-                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                    <Table sx={{ minWidth: 650 }} aria-label='simple table'>
                       <TableHead sx={{ fontWeight: 'bold' }}>
                         <TableRow sx={{ fontWeight: 'bold' }}>
-                          <TableCell align="left">Dispense Status</TableCell>
-                          <TableCell align="right">Quanitities</TableCell>
-                          <TableCell align="right">Drug Price</TableCell>
-                          <TableCell align="right">Total</TableCell>
-                          <TableCell align="right">Doctor Name</TableCell>
-                          <TableCell align="right">Doctor ID</TableCell>
-                          <TableCell align="right">Doctor Contact</TableCell>
-                          <TableCell align="right">Doctor Email</TableCell>
-                          <TableCell align="right">Pickup Date</TableCell>
+                          <TableCell align='left'>Dispense Status</TableCell>
+                          <TableCell align='right'>Quanitities</TableCell>
+                          <TableCell align='right'>Drug Price</TableCell>
+                          <TableCell align='right'>Total</TableCell>
+                          <TableCell align='right'>Doctor Name</TableCell>
+                          <TableCell align='right'>Doctor ID</TableCell>
+                          <TableCell align='right'>Doctor Contact</TableCell>
+                          <TableCell align='right'>Doctor Email</TableCell>
+                          <TableCell align='right'>Pickup Date</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
                         <TableRow>
-                          <TableCell align="left">{row.dispenseStatus}</TableCell>
-                          <TableCell align="right">{row.quanitities}</TableCell>
-                          <TableCell align="right">{row.drugPrice}</TableCell>
-                          <TableCell align="right">{row.total}</TableCell>
-                          <TableCell align="right">{row.doctorName}</TableCell>
-                          <TableCell align="right">{row.doctorID}</TableCell>
-                          <TableCell align="right">{row.doctorContact}</TableCell>
-                          <TableCell align="right">{row.doctorEmail}</TableCell>
-                          <TableCell align="right">{row.pickupDate}</TableCell>
+                          <TableCell align='left'>{row.dispenseStatus}</TableCell>
+                          <TableCell align='right'>{row.quanitities}</TableCell>
+                          <TableCell align='right'>{row.drugPrice}</TableCell>
+                          <TableCell align='right'>{row.total}</TableCell>
+                          <TableCell align='right'>{row.doctorName}</TableCell>
+                          <TableCell align='right'>{row.doctorID}</TableCell>
+                          <TableCell align='right'>{row.doctorContact}</TableCell>
+                          <TableCell align='right'>{row.doctorEmail}</TableCell>
+                          <TableCell align='right'>{row.pickupDate}</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
@@ -124,7 +122,7 @@ const OrderCard = (props: any) => {
                     <EtasuPopUp data={row} />
                     {(props.tabStatus == 'Pending') ? <VerifyButton data={{row, getAllDoctorOrders}}/> : ''}
                     {(props.tabStatus == 'Approved') ?  <PickedUpButton data={{row, getAllDoctorOrders}}/> : ''}
-                    {/* <Button variant="contained" size="small" onClick={}>Verify Order</Button> */}
+                    {/* <Button variant='contained' size='small' onClick={}>Verify Order</Button> */}
                   </Box>
                 </CardActions>
               </Card>
@@ -132,7 +130,7 @@ const OrderCard = (props: any) => {
           </Card>
         )}
         <Box sx={{ marginLeft: 'auto', m: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <Button onClick={deleteAll} variant="outlined" color="error" size="small" sx={{ mr: '10px' }}>Remove All</Button>
+          <Button onClick={deleteAll} variant='outlined' color='error' size='small' sx={{ mr: '10px' }}>Remove All</Button>
         </Box>
       </Card>
     );

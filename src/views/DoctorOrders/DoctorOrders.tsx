@@ -21,7 +21,7 @@ export default function DoctorOrders() {
   };
 
   return (
-    <Container maxWidth="xl">
+    <Container maxWidth='xl'>
       <Box sx={{
         width: '100%',
         border: 1,
@@ -32,10 +32,10 @@ export default function DoctorOrders() {
 
       }}>
         <Box sx={{ backgroundColor: '#F1F3F4', borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabIndex} onChange={handleChange} aria-label="basic tabs example" centered>
-            <Tab label="New Orders" {...a11yProps(0)} />
-            <Tab label="Verified Up Orders" {...a11yProps(1)} />
-            <Tab label="Picked Orders" {...a11yProps(2)} />
+          <Tabs value={tabIndex} onChange={handleChange} aria-label='basic tabs example' centered>
+            <Tab label='New Orders' {...a11yProps(0)} />
+            <Tab label='Verified Up Orders' {...a11yProps(1)} />
+            <Tab label='Picked Orders' {...a11yProps(2)} />
           </Tabs>
         </Box>
 

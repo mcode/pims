@@ -1,10 +1,9 @@
-import React from 'react';
 import OrderCard from '../OrderCard/OrderCard';
 import './VerifiedOrders.css';
 
 const VerifiedOrders = () => {
   return (
-    <div className="VerifiedOrders">
+    <div className='VerifiedOrders'>
         <h1>VerifiedOrders</h1>
         <OrderCard tabStatus = {'Approved'}/>
     </div>
