@@ -1,13 +1,13 @@
 import OrderCard from '../OrderCard/OrderCard';
 import './NewOrders.css';
 
-function NewOrders() {
+const NewOrders = () => {
   return (
-    <div className="NewOrders">
+    <div className='NewOrders'>
       <h1>NewOrders</h1>
-      <OrderCard></OrderCard>
+      <OrderCard tabStatus = {'Pending'}/>
     </div>
   );
-}
+};
 
 export default NewOrders;

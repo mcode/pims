@@ -4,4 +4,4 @@ COPY --chown=node:node . .
 RUN npm install
 EXPOSE 5050
 EXPOSE 5051
-CMD ./dockerRunnerDev.sh
+CMD npm run start
