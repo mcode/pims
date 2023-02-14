@@ -60,7 +60,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
         console.log('found by id!');
 
         // Reaching out to REMS Admin finding by pt name and drug name 
-        const remsBase = process.env.REMS_ADMIN_BASE ? process.env.USER_KEY: 'http://localhost:8090';
+        const remsBase = process.env.REMS_ADMIN_BASE ? process.env.REMS_ADMIN_BASE: 'http://localhost:8090';
         const url = remsBase + '/etasu/met/patient/' + order.patientName + '/drug/' + order.simpleDrugName;
         console.log(url);
         const response = await axios.get(url);
