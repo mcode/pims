@@ -18,10 +18,12 @@ async function main() {
     app.listen(port, () => console.log(`Listening on port ${port}`));
     app.use('/doctorOrders', doctorOrders);
 
-    await mongoose.connect('mongodb://pims_remsadmin_mongo:27017/pims', {
+    const mongoHost = process.env.MONGO_HOSTNAME ? process.env.MONGO_HOSTNAME : 'mongodb://localhost:27017/pims'
+
+    await mongoose.connect(mongoHost, {
         authSource: 'admin',
-        'user': 'rems-admin-pims-root',
-        'pass': 'rems-admin-pims-password',
+        'user': process.env.MONGO_USERNAME ? process.env.MONGO_USERNAME : 'rems-admin-pims-root',
+        'pass': process.env.MONGO_PASSWORD ? process.env.MONGO_PASSWORD : 'rems-admin-pims-password',
     });
 }
 
