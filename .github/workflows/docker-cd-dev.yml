@@ -2,7 +2,7 @@ name: Docker Development Image CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dev ]
   workflow_dispatch:
 
 jobs:
@@ -24,4 +24,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: codexrems/pims:REMSvCurrent
+        tags: codexrems/pims:REMSvExperimental
