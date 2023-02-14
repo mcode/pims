@@ -1,27 +1,28 @@
-const mongoose = require('mongoose');
-
+import mongoose from 'mongoose';
 const orderSchema = new mongoose.Schema({
-    caseNumber: String,
-    patientName: String,
-    patientDOB: String,
-    doctorName: String,
-    doctorContact: String,
-    doctorID: String,
-    doctorEmail: String,
-    drugNames: String,
-    simpleDrugName: String,
-    drugPrice: Number,
-    quanitities: String,
-    total: Number,
-    pickupDate: String,
-    dispenseStatus: String,
-    metRequirements: [{
-        stakeholderId: String,
-        completed: Boolean,
-        metRequirementId: String,
-        requirementName: String,
-        requirementDescription:String
-    }]
+  caseNumber: String,
+  patientName: String,
+  patientDOB: String,
+  doctorName: String,
+  doctorContact: String,
+  doctorID: String,
+  doctorEmail: String,
+  drugNames: String,
+  simpleDrugName: String,
+  drugPrice: Number,
+  quanitities: String,
+  total: Number,
+  pickupDate: String,
+  dispenseStatus: String,
+  metRequirements: [
+    {
+      stakeholderId: String,
+      completed: Boolean,
+      metRequirementId: String,
+      requirementName: String,
+      requirementDescription: String
+    }
+  ]
 });
 
 // Compound index is used to prevent duplicates based off of the given parameters
@@ -29,5 +30,4 @@ const orderSchema = new mongoose.Schema({
 
 const doctorOrder = mongoose.model('doctorOrder', orderSchema);
 
-module.exports = doctorOrder;
-
+export default doctorOrder;
