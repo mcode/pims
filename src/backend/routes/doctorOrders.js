@@ -102,7 +102,7 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
     );
     res.send(newOrder);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     console.log('ERROR! Could not find id');
     return error;
   }
