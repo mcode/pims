@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema({
 });
 
 // Compound index is used to prevent duplicates based off of the given parameters
-orderSchema.index({ simpleDrugName: 1, patientName: 1 }, { unique: true });// schema level
+orderSchema.index({ simpleDrugName: 1, patientName: 1 }, { unique: true }); // schema level
 
 const doctorOrder = mongoose.model('doctorOrder', orderSchema);
 
