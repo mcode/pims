@@ -16,7 +16,7 @@ async function main() {
   app.listen(port, () => console.log(`Listening on port ${port}`));
   app.use('/doctorOrders', doctorOrders);
 
-  const mongoHost = process.env.MONGO_HOSTNAME ? process.env.MONGO_HOSTNAME : 'mongodb://localhost:27017/pims'
+  const mongoHost = process.env.MONGO_HOSTNAME ? process.env.MONGO_HOSTNAME : 'mongodb://localhost:27017/pims';
 
   await mongoose.connect(mongoHost, {
       authSource: 'admin',
