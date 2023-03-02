@@ -93,20 +93,21 @@ router.patch('/api/updateRx/:id', async (req, res) => {
  */
 router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
   try {
-    await doctorOrder.findOneAndUpdate(
+    const newOrder = await doctorOrder.findOneAndUpdate(
       { _id: req.params.id },
       { dispenseStatus: 'Picked Up' },
       {
         new: true
       }
     );
+    res.send(newOrder);
   } catch (error) {
+    console.log(error);
     console.log('ERROR! Could not find id');
     return error;
   }
 
   // console.log(newOrder);
-  // res.send(newOrder);
 });
 
 /**
@@ -129,7 +130,7 @@ router.get('/api/getRx/patient/:patientName/drug/:simpleDrugName', async (req, r
 router.delete('/api/deleteAll', async (req, res) => {
   await doctorOrder.deleteMany({});
   console.log('All doctorOrders deleted in PIMS!');
-  res.send('DELETE Request Called');
+  res.send([]);
 });
 
 /**

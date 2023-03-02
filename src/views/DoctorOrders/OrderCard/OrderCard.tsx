@@ -30,14 +30,15 @@ interface DoctorOrder {
 }
 
 const OrderCard = (props: any) => {
-  //remove all doctorOrders
-  const deleteAll = () => {
-    axios.delete('/doctorOrders/api/deleteAll');
-    console.log('Deleting all Doctor Orders');
-  };
 
   const [doctorOrder, getDoctorOrders] = useState<DoctorOrder[]>([]);
 
+    //remove all doctorOrders
+  const deleteAll = async () => {
+    const orders = await axios.delete('/doctorOrders/api/deleteAll');
+    getDoctorOrders(orders.data);
+    console.log('Deleting all Doctor Orders');
+  };
   const url = '/doctorOrders/api/getRx';
 
   // Running after component renders to call api 
