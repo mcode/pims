@@ -110,16 +110,6 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
   // console.log(newOrder);
 });
 
-function isPathValidInSchema(schema, path) {
-    if (schema.path(path) != undefined) {
-      console.log("path " + path + " is VALID");
-      return true;
-    } else {
-      console.log("path " + path + " is NOT valid");
-      return false;
-    }
-}
-
 /**
  * Route : 'doctorOrders/api/getRx/patient/:patientName/drug/:simpleDrugName`
  * Description : 'Fetches first available doctor order based on patientFirstName, patientLastName and patientDOB'
@@ -133,7 +123,7 @@ router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (r
     patientFirstName: req.params.patientFirstName,
     patientLastName: req.params.patientLastName,
     patientDOB: req.params.patientDOB
-  }
+  };
 
   if (req.query && Object.keys(req.query).length > 0) {
 
