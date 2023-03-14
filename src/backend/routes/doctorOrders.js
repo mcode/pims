@@ -64,7 +64,13 @@ router.patch('/api/updateRx/:id', async (req, res) => {
       ? process.env.REMS_ADMIN_BASE
       : 'http://localhost:8090';
     const url =
-      remsBase + '/etasu/met/patient/' + order.patientFirstName + ' ' + order.patientLastName + '/drug/' + order.simpleDrugName;
+      remsBase +
+      '/etasu/met/patient/' +
+      order.patientFirstName +
+      ' ' +
+      order.patientLastName +
+      '/drug/' +
+      order.simpleDrugName;
     console.log(url);
     const response = await axios.get(url);
     console.log(response.data);
@@ -118,7 +124,6 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
  *     'Optional Parameters : all remaining values in the orderSchema as query parameters (?drugNdcCode=0245-0571-01,rxDate=2020-07-11)'
  */
 router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (req, res) => {
-
   var searchDict = {
     patientFirstName: req.params.patientFirstName,
     patientLastName: req.params.patientLastName,
@@ -126,22 +131,17 @@ router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (r
   };
 
   if (req.query && Object.keys(req.query).length > 0) {
-
     // add the query parameters
     for (const prop in req.query) {
-
       // verify that the parameter is in the orderSchema
       if (orderSchema.path(prop) != undefined) {
-
         // add the parameters to the search query
         searchDict[prop] = req.query[prop];
       }
     }
   }
 
-  const prescription = await doctorOrder
-    .findOne(searchDict)
-    .exec();
+  const prescription = await doctorOrder.findOne(searchDict).exec();
 
   console.log('GET DoctorOrder: ');
   console.log(prescription);
@@ -166,8 +166,9 @@ function parseNCPDPScript(newRx) {
   // Parsing  XML NCPDP SCRIPT from EHR
   var newOrder = new doctorOrder({
     caseNumber: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
-    patientName: newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName + 
-      ' ' + 
+    patientName:
+      newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName +
+      ' ' +
       newRx.Message.Body.NewRx.Patient.HumanPatient.Name.LastName,
     patientFirstName: newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName,
     patientLastName: newRx.Message.Body.NewRx.Patient.HumanPatient.Name.LastName,
