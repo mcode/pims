@@ -40,7 +40,7 @@ router.post('/api/addRx', async (req, res) => {
   try {
     await newOrder.save(); //updating the object or adding to it
   } catch (error) {
-    console.log('ERROR! douplicate found, prescription already exists');
+    console.log('ERROR! duplicate found, prescription already exists');
     return error;
   }
 
