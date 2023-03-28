@@ -60,6 +60,8 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     console.log('found by id!');
 
     // Reaching out to REMS Admin finding by pt name and drug name
+    // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
+
     const remsBase = process.env.REMS_ADMIN_BASE
       ? process.env.REMS_ADMIN_BASE
       : 'http://localhost:8090';
@@ -67,8 +69,10 @@ router.patch('/api/updateRx/:id', async (req, res) => {
       remsBase +
       '/etasu/met/patient/' +
       order.patientFirstName +
-      ' ' +
+      '/' +
       order.patientLastName +
+      '/' +
+      order.patientDOB +
       '/drug/' +
       order.simpleDrugName;
     console.log(url);
