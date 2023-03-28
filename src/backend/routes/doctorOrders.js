@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import doctorOrder from '../database/schemas/doctorOrderSchemas.js';
+import { doctorOrder, orderSchema } from '../database/schemas/doctorOrderSchemas.js';
 import axios from 'axios';
 // XML Parsing Middleware used for NCPDP SCRIPT
 import bodyParser from 'body-parser';
@@ -40,7 +40,7 @@ router.post('/api/addRx', async (req, res) => {
   try {
     await newOrder.save(); //updating the object or adding to it
   } catch (error) {
-    console.log('ERROR! douplicate found, prescription already exists already exists');
+    console.log('ERROR! duplicate found, prescription already exists');
     return error;
   }
 
@@ -60,11 +60,21 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     console.log('found by id!');
 
     // Reaching out to REMS Admin finding by pt name and drug name
+    // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
+
     const remsBase = process.env.REMS_ADMIN_BASE
       ? process.env.REMS_ADMIN_BASE
       : 'http://localhost:8090';
     const url =
-      remsBase + '/etasu/met/patient/' + order.patientName + '/drug/' + order.simpleDrugName;
+      remsBase +
+      '/etasu/met/patient/' +
+      order.patientFirstName +
+      '/' +
+      order.patientLastName +
+      '/' +
+      order.patientDOB +
+      '/drug/' +
+      order.simpleDrugName;
     console.log(url);
     const response = await axios.get(url);
     console.log(response.data);
@@ -93,30 +103,49 @@ router.patch('/api/updateRx/:id', async (req, res) => {
  */
 router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
   try {
-    await doctorOrder.findOneAndUpdate(
+    const newOrder = await doctorOrder.findOneAndUpdate(
       { _id: req.params.id },
       { dispenseStatus: 'Picked Up' },
       {
         new: true
       }
     );
+    res.send(newOrder);
   } catch (error) {
+    console.log(error);
     console.log('ERROR! Could not find id');
     return error;
   }
 
   // console.log(newOrder);
-  // res.send(newOrder);
 });
 
 /**
  * Route : 'doctorOrders/api/getRx/patient/:patientName/drug/:simpleDrugName`
- * Description : 'Fetches doctor order bases on patientName and Drug name'
+ * Description : 'Fetches first available doctor order based on patientFirstName, patientLastName and patientDOB'
+ *     'To retrieve a specific one for a drug on a given date, supply the drugNdcCode and rxDate in the query parameters'
+ *     'Required Parameters : patientFirstName, patientLastName patientDOB are part of the path'
+ *     'Optional Parameters : all remaining values in the orderSchema as query parameters (?drugNdcCode=0245-0571-01,rxDate=2020-07-11)'
  */
-router.get('/api/getRx/patient/:patientName/drug/:simpleDrugName', async (req, res) => {
-  const prescription = await doctorOrder
-    .findOne({ patientName: req.params.patientName, simpleDrugName: req.params.simpleDrugName })
-    .exec();
+router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (req, res) => {
+  var searchDict = {
+    patientFirstName: req.params.patientFirstName,
+    patientLastName: req.params.patientLastName,
+    patientDOB: req.params.patientDOB
+  };
+
+  if (req.query && Object.keys(req.query).length > 0) {
+    // add the query parameters
+    for (const prop in req.query) {
+      // verify that the parameter is in the orderSchema
+      if (orderSchema.path(prop) != undefined) {
+        // add the parameters to the search query
+        searchDict[prop] = req.query[prop];
+      }
+    }
+  }
+
+  const prescription = await doctorOrder.findOne(searchDict).exec();
 
   console.log('GET DoctorOrder: ');
   console.log(prescription);
@@ -129,7 +158,7 @@ router.get('/api/getRx/patient/:patientName/drug/:simpleDrugName', async (req, r
 router.delete('/api/deleteAll', async (req, res) => {
   await doctorOrder.deleteMany({});
   console.log('All doctorOrders deleted in PIMS!');
-  res.send('DELETE Request Called');
+  res.send([]);
 });
 
 /**
@@ -145,7 +174,13 @@ function parseNCPDPScript(newRx) {
       newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName +
       ' ' +
       newRx.Message.Body.NewRx.Patient.HumanPatient.Name.LastName,
+    patientFirstName: newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName,
+    patientLastName: newRx.Message.Body.NewRx.Patient.HumanPatient.Name.LastName,
     patientDOB: newRx.Message.Body.NewRx.Patient.HumanPatient.DateOfBirth.Date,
+    patientCity: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.City,
+    patientStateProvince: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.StateProvince,
+    patientPostalCode: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.PostalCode,
+    patientCountry: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.Country,
     doctorName:
       'Dr. ' +
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Name.FirstName +
@@ -159,6 +194,8 @@ function parseNCPDPScript(newRx) {
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
     drugNames: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription,
     simpleDrugName: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription.split(' ')[0],
+    drugNdcCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode.Code,
+    rxDate: newRx.Message.Body.NewRx.MedicationPrescribed.WrittenDate.Date,
     drugPrice: 200, // Add later?
     quanitities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
     total: 1800,
