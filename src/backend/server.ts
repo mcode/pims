@@ -11,8 +11,14 @@ import bodyParser from 'body-parser';
 main().catch(err => console.log(err));
 
 async function main() {
+  const allowedOrigins = ['http://localhost:3000/', 'http://localhost:3008/'];
+
+  const options: cors.CorsOptions = {
+    origin: allowedOrigins
+  };
+
   app.use(bodyParser.urlencoded({ extended: false }));
-  app.use(cors(['http://localhost:3000/', 'http://localhost:3008/']));
+  app.use(cors(options));
   app.listen(port, () => console.log(`Listening on port ${port}`));
   app.use('/doctorOrders', doctorOrders);
 

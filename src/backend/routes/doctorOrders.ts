@@ -68,13 +68,13 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     const url =
       remsBase +
       '/etasu/met/patient/' +
-      order.patientFirstName +
+      order?.patientFirstName +
       '/' +
-      order.patientLastName +
+      order?.patientLastName +
       '/' +
-      order.patientDOB +
+      order?.patientDOB +
       '/drug/' +
-      order.simpleDrugName;
+      order?.simpleDrugName;
     console.log(url);
     const response = await axios.get(url);
     console.log(response.data);
@@ -128,7 +128,7 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
  *     'Optional Parameters : all remaining values in the orderSchema as query parameters (?drugNdcCode=0245-0571-01,rxDate=2020-07-11)'
  */
 router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (req, res) => {
-  var searchDict = {
+  const searchDict: any = {
     patientFirstName: req.params.patientFirstName,
     patientLastName: req.params.patientLastName,
     patientDOB: req.params.patientDOB
@@ -166,38 +166,34 @@ router.delete('/api/deleteAll', async (req, res) => {
  * In : NCPDP SCRIPT XML <NewRx>
  * Return : Mongoose schema of a newOrder
  */
-function parseNCPDPScript(newRx) {
+function parseNCPDPScript(newRx: any) {
   // Parsing  XML NCPDP SCRIPT from EHR
-  var newOrder = new doctorOrder({
+  const Patient = newRx.Message.Body.NewRx.Patient.HumanPatient;
+  const PatientName = Patient.Name;
+  const PatientAddress = Patient.Address;
+  const Provider = newRx.Message.Body.NewRx.Prescriber.NonVeterinarian;
+  const ProviderName = Provider.Name;
+  const MedicationPrescribed = newRx.Message.Body.NewRx.MedicationPrescribed;
+  const newOrder = new doctorOrder({
     caseNumber: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
-    patientName:
-      newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName +
-      ' ' +
-      newRx.Message.Body.NewRx.Patient.HumanPatient.Name.LastName,
-    patientFirstName: newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName,
-    patientLastName: newRx.Message.Body.NewRx.Patient.HumanPatient.Name.LastName,
-    patientDOB: newRx.Message.Body.NewRx.Patient.HumanPatient.DateOfBirth.Date,
-    patientCity: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.City,
-    patientStateProvince: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.StateProvince,
-    patientPostalCode: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.PostalCode,
-    patientCountry: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.Country,
-    doctorName:
-      'Dr. ' +
-      newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Name.FirstName +
-      ' ' +
-      newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Name.LastName,
-    doctorContact:
-      newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.PrimaryTelephone
-        .Number,
-    doctorID: newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Identification.NPI,
-    doctorEmail:
-      newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
-    drugNames: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription,
-    simpleDrugName: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription.split(' ')[0],
-    drugNdcCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode.Code,
-    rxDate: newRx.Message.Body.NewRx.MedicationPrescribed.WrittenDate.Date,
+    patientName: `${PatientName.FirstName} ${PatientName.LastName}`,
+    patientFirstName: PatientName.FirstName,
+    patientLastName: PatientName.LastName,
+    patientDOB: Patient?.DateOfBirth?.Date,
+    patientCity: PatientAddress.City,
+    patientStateProvince: PatientAddress.StateProvince,
+    patientPostalCode: PatientAddress.PostalCode,
+    patientCountry: PatientAddress.Country,
+    doctorName: `Dr ${ProviderName.FirstName} ${ProviderName.LastName}`,
+    doctorContact: Provider.CommunicationNumbers.PrimaryTelephone.Number,
+    doctorID: Provider.Identification.NPI,
+    doctorEmail: Provider.CommunicationNumbers.ElectronicMail,
+    drugNames: MedicationPrescribed.DrugDescription,
+    simpleDrugName: MedicationPrescribed.DrugDescription.split(' ')[0],
+    drugNdcCode: MedicationPrescribed.DrugCoded.ProductCode.Code,
+    rxDate: MedicationPrescribed.WrittenDate.Date,
     drugPrice: 200, // Add later?
-    quanitities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
+    quanitities: MedicationPrescribed.Quantity.Value,
     total: 1800,
     pickupDate: 'Tue Dec 13 2022', // Add later?
     dispenseStatus: 'Pending',
