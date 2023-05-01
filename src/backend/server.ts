@@ -13,7 +13,6 @@ main().catch(err => console.log(err));
 
 async function main() {
   const port = env.PORT;
-  const allowedOrigins = env.ALLOWED_ORIGIN;
 
   const options: cors.CorsOptions = {
     origin: env.ALLOWED_ORIGIN
