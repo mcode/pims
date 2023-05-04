@@ -1,9 +1,13 @@
 # Pharmacy Information Management System
 
+### `npm install`
+
+This will install all of the application's dependency listed in the `package.json`
+
 ### `npm start`
 
 Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:5050) to view it in the browser. This will start the front-end and back-end component of pims.
+Open [http://localhost:5050](http://localhost:5050) to view it in the browser. This will start the front-end and back-end component of pims.
 
 ### `npm run build`
 
