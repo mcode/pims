@@ -11,7 +11,7 @@ import bodyParser from 'body-parser';
 main().catch(err => console.log(err));
 
 async function main() {
-  const port = env.PORT;
+  const port = env.BACKEND_PORT;
 
   const options = {
     origin: env.ALLOWED_ORIGIN
