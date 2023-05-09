@@ -2,18 +2,19 @@ import express from 'express';
 import doctorOrders from './routes/doctorOrders.js';
 const app = express();
 
-import mongoose from 'mongoose';
-import env from 'var';
 import cors from 'cors';
+import mongoose from 'mongoose';
+import { env } from 'var';
+
 //middleware and configurations
 import bodyParser from 'body-parser';
 
 main().catch(err => console.log(err));
 
 async function main() {
-  const port = env.BACKEND_PORT;
+  const port = env.PORT;
 
-  const options = {
+  const options: cors.CorsOptions = {
     origin: env.ALLOWED_ORIGIN
   };
 

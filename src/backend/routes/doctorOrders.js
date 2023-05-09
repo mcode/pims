@@ -5,6 +5,7 @@ import axios from 'axios';
 // XML Parsing Middleware used for NCPDP SCRIPT
 import bodyParser from 'body-parser';
 import bpx from 'body-parser-xml';
+import env from 'var';
 bpx(bodyParser);
 router.use(
   bodyParser.xml({
@@ -62,9 +63,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     // Reaching out to REMS Admin finding by pt name and drug name
     // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
 
-    const remsBase = process.env.REMS_ADMIN_BASE
-      ? process.env.REMS_ADMIN_BASE
-      : 'http://localhost:8090';
+    const remsBase = env.REMS_ADMIN_BASE;
     const url =
       remsBase +
       '/etasu/met/patient/' +
