@@ -8,7 +8,10 @@ import {
 import './App.css';
 import DoctorOrders from './views/DoctorOrders/DoctorOrders';
 import Login from './views/Login/Login';
+import axios from 'axios';
 
+axios.defaults.baseURL = process.env.REACT_APP_PIMS_BACKEND_URL ? process.env.REACT_APP_PIMS_BACKEND_URL : 
+  'http://localhost:' + (process.env.REACT_APP_PIMS_BACKEND_PORT ? process.env.REACT_APP_PIMS_BACKEND_PORT : '5051') ;
 
 function App() {
   return (

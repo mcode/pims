@@ -77,6 +77,5 @@
       "last 1 safari version"
     ]
   },
-  "type": "module",
-  "proxy": "http://localhost:5051"
+  "type": "module"
 }
