@@ -24,30 +24,51 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.4",
     "react-scripts": "5.0.1",
-    "typescript": "^4.8.4",
     "var": "^0.4.0",
     "web-vitals": "^2.1.4",
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.13",
-    "eslint": "^8.5.0",
-    "eslint-config-prettier": "^6.10.1",
-    "jest": "^27.4.5",
-    "jest-extended": "^1.2.0",
+    "@types/chai": "^4.3.4",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.14",
+    "@types/lodash": "^4.14.188",
+    "@types/mocha": "^10.0.1",
+    "@types/mongodb-memory-server": "2.3.0",
+    "@types/mongoose": "^5.11.97",
+    "@types/morgan": "^1.9.3",
+    "@types/node": "^18.11.9",
+    "@types/nodemon": "^1.19.2",
+    "@types/sinon": "10.0.13",
+    "@types/uuid": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "axios-mock-adapter": "^1.21.2",
+    "chai": "^4.3.7",
+    "chai-http": "^4.3.0",
+    "eslint": "^8.28.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "json-diff": "^0.9.0",
+    "mocha": "^10.2.0",
+    "mongodb-memory-server": "^8.12.1",
+    "nock": "^13.2.9",
     "nodemon": "^2.0.20",
-    "npm-run-all": "^4.1.5",
-    "prettier": "^2.0.2",
+    "prettier": "^2.0.5",
+    "sinon": "^15.0.3",
     "ts-jest": "^27.1.2",
-    "ts-node": "^9.1.1"
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^4.9.3"
   },
   "scripts": {
     "startFrontend": "PORT=5050 react-scripts start",
     "startBackend": "nodemon ./src/backend/server.js",
+    "testFrontend": "react-scripts test --watchAll=false",
+    "testBackend": "mocha",
     "start": "npm-run-all --parallel startBackend startFrontend",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "npm-run-all testFrontend testBackend",
     "eject": "react-scripts eject",
     "lint": "tsc && eslint \"**/*.{js,ts}\"",
     "lint:fix": "tsc --noEmit && eslint \"**/*.{js,ts}\" --quiet --fix",
@@ -77,5 +98,7 @@
       "last 1 safari version"
     ]
   },
-  "type": "module"
+
+  "proxy": "http://localhost:5051"
+
 }

@@ -23,7 +23,7 @@ async function main() {
   app.listen(port, () => console.log(`Listening on port ${port}`));
   app.use('/doctorOrders', doctorOrders);
 
-  const mongoHost = env.MONGO_HOSTNAME;
+  const mongoHost = env.MONGO_URL;
 
   await mongoose.connect(mongoHost, {
     authSource: env.AUTH_SOURCE,
