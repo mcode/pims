@@ -23,7 +23,7 @@ jobs:
     defaults: 
       run:
         working-directory: backend 
-    name: Check tsc, lint, and prettier on front end 
+    name: Check tsc, lint, and prettier on back end 
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -39,7 +39,7 @@ jobs:
     defaults: 
       run:
         working-directory: frontend
-    name: Test on node ${{ matrix.node-version }} and ${{ matrix.os }}
+    name: Test on node ${{ matrix.node-version }} and ${{ matrix.os }} on backend
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -61,7 +61,7 @@ jobs:
     defaults: 
       run:
         working-directory: backend
-    name: Test on node ${{ matrix.node-version }} and ${{ matrix.os }}
+    name: Test on node ${{ matrix.node-version }} and ${{ matrix.os }} on backend 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
