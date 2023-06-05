@@ -4,8 +4,10 @@ on: [push, pull_request]
 
 jobs:
   lint_frontend:
+    defaults: 
+      run:
+        working-directory: frontend
     name: Check tsc, lint, and prettier on front end 
-    working-directory: frontend
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -18,8 +20,10 @@ jobs:
       env:
         CI: true
   lint_backend: 
+    defaults: 
+      run:
+        working-directory: backend 
     name: Check tsc, lint, and prettier on front end 
-    working-directory: frontend
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -32,7 +36,9 @@ jobs:
       env:
         CI: true
   test_frontend:
-    working-directory: frontend
+    defaults: 
+      run:
+        working-directory: frontend
     name: Test on node ${{ matrix.node-version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -52,7 +58,9 @@ jobs:
         CI: true
 
   test_backend:
-    working-directory: frontend
+    defaults: 
+      run:
+        working-directory: backend
     name: Test on node ${{ matrix.node-version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
