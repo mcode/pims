@@ -8,7 +8,10 @@ node_modules
 coverage
 
 # production
-/build
+frontend/build
+frontend/dist
+backend/build
+backend/dist
 
 # misc
 .DS_Store

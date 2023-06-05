@@ -3,26 +3,62 @@ name: Lint and Test
 on: [push, pull_request]
 
 jobs:
-  lint:
-    name: Check tsc, lint, and prettier
+  lint_frontend:
+    name: Check tsc, lint, and prettier on front end 
+    working-directory: frontend
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-node@v1
       with:
-        node-version: '12.x'
+        node-version: '14.x'
     - run: npm install
     - run: npm run lint
     - run: npm run prettier
       env:
         CI: true
-  test:
+  lint_backend: 
+    name: Check tsc, lint, and prettier on front end 
+    working-directory: frontend
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '14.x'
+    - run: npm install
+    - run: npm run lint
+    - run: npm run prettier
+      env:
+        CI: true
+  test_frontend:
+    working-directory: frontend
     name: Test on node ${{ matrix.node-version }} and ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [12]
+        node-version: [14]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm install
+    - run: npm test
+      env:
+        CI: true
+
+  test_backend:
+    working-directory: frontend
+    name: Test on node ${{ matrix.node-version }} and ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [14]
 
     steps:
     - uses: actions/checkout@v1

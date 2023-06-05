@@ -52,11 +52,10 @@
   "scripts": {
     "start": "react-scripts start",
     "test": "react-scripts test --watchAll=false",
-    "testBackend": "mocha",
     "build": "react-scripts build",
     "eject": "react-scripts eject",
     "lint": "tsc && eslint \"**/*.{js,ts}\"",
-    "lint:fix": "tsc --noEmit && eslint \"**/*.{js,ts}\" --quiet --fix",
+    "lint:fix": "eslint \"**/*.{js,ts}\" --quiet --fix",
     "prettier": "prettier --check \"**/*.{js,ts}\"",
     "prettier:fix": "prettier --write \"**/*.{js,ts}\""
   },
