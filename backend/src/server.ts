@@ -2,9 +2,10 @@ import express from 'express';
 import doctorOrders from './routes/doctorOrders.js';
 const app = express();
 
+import cors from 'cors';
 import mongoose from 'mongoose';
 import env from 'var';
-import cors from 'cors';
+
 //middleware and configurations
 import bodyParser from 'body-parser';
 
@@ -13,7 +14,7 @@ main().catch(err => console.log(err));
 async function main() {
   const port = env.BACKEND_PORT;
 
-  const options = {
+  const options: cors.CorsOptions = {
     origin: env.ALLOWED_ORIGIN
   };
 
@@ -22,7 +23,7 @@ async function main() {
   app.listen(port, () => console.log(`Listening on port ${port}`));
   app.use('/doctorOrders', doctorOrders);
 
-  const mongoHost = env.MONGO_HOSTNAME;
+  const mongoHost = env.MONGO_URL;
 
   await mongoose.connect(mongoHost, {
     authSource: env.AUTH_SOURCE,
