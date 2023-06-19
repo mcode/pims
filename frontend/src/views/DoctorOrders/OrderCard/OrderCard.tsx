@@ -70,7 +70,7 @@ const OrderCard = (props: any) => {
         {doctorOrder.map((row) =>
           <Card key={row.caseNumber} sx={{ minWidth: 275, margin: 2, boxShadow: '10px' }}>
             {/* Checking dispense status for the right tab to display it correctly */}
-            {(props.tabStatus == row.dispenseStatus) ?
+            {(props.tabStatus === row.dispenseStatus) ?
               <Card>
                 <CardContent>
                     <Box>
@@ -121,8 +121,8 @@ const OrderCard = (props: any) => {
                 <CardActions>
                   <Box sx={{ marginLeft: 'auto', mr: '8px' }}>
                     <EtasuPopUp data={row} />
-                    {(props.tabStatus == 'Pending') ? <VerifyButton data={{row, getAllDoctorOrders}}/> : ''}
-                    {(props.tabStatus == 'Approved') ?  <PickedUpButton data={{row, getAllDoctorOrders}}/> : ''}
+                    {(props.tabStatus === 'Pending') ? <VerifyButton data={{row, getAllDoctorOrders}}/> : ''}
+                    {(props.tabStatus === 'Approved') ?  <PickedUpButton data={{row, getAllDoctorOrders}}/> : ''}
                     {/* <Button variant='contained' size='small' onClick={}>Verify Order</Button> */}
                   </Box>
                 </CardActions>
