@@ -187,7 +187,7 @@ function parseNCPDPScript(newRx) {
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Name.LastName,
     doctorContact:
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.PrimaryTelephone
-        .Number,
+        ?.Number,
     doctorID: newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Identification.NPI,
     doctorEmail:
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
