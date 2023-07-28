@@ -1,0 +1,64 @@
+[
+  {
+    "caseNumber": "1690318219063",
+    "dispenseStatus": "Picked Up",
+    "doctorContact": "716-873-1557",
+    "doctorEmail": "jane.betty@myhospital.com",
+    "doctorID": "1122334455",
+    "doctorName": "Dr. Jane Doe",
+    "drugNames": "TIRF 200 UG Oral Transmucosal Lozenge",
+    "drugNdcCode": "63459-502-30",
+    "drugPrice": 200,
+    "metRequirements": [
+      {
+        "completed": true,
+        "metRequirementId": "64c035c168ccf5e94d7c69db",
+        "requirementDescription": "Submit Patient Enrollment form to the REMS Administrator",
+        "requirementName": "Patient Enrollment",
+        "stakeholderId": "Patient/pat017",
+        "_id": "64c0405d7f9ffd23e64bebf7"
+      },
+      {
+        "completed": true,
+        "metRequirementId": "64c035c168ccf5e94d7c69de",
+        "requirementDescription": "Submit Prescriber Enrollment form to the REMS Administrator",
+        "requirementName": "Prescriber Enrollment",
+        "stakeholderId": "Practitioner/pra1234",
+        "_id": "64c0405d7f9ffd23e64bebf8"
+      },
+      {
+        "completed": true,
+        "metRequirementId": "64c035bc68ccf5e94d7c69d8",
+        "requirementName": "Prescriber Knowledge Assessment",
+        "stakeholderId": "Practitioner/pra1234",
+        "_id": "64c0405d7f9ffd23e64bebf9"
+      },
+      {
+        "completed": true,
+        "metRequirementId": "64b992ff5afcf9a5cd637093",
+        "requirementName": "Pharmacist Enrollment",
+        "stakeholderId": "Organization/pharm0111",
+        "_id": "64c0405d7f9ffd23e64bebfa"
+      },
+      {
+        "completed": true,
+        "metRequirementId": "64b992ff5afcf9a5cd637094",
+        "requirementName": "Pharmacist Knowledge Assessment",
+        "stakeholderId": "Organization/pharm0111",
+        "_id": "64c0405d7f9ffd23e64bebfb"
+      }
+    ],
+    "patientCity": "Winterfell",
+    "patientCountry": "US",
+    "patientDOB": "1996-06-01",
+    "patientFirstName": "Jon",
+    "patientLastName": "Snow",
+    "patientName": "Jon Snow",
+    "patientPostalCode": "00008",
+    "patientStateProvince": "Westeros",
+    "pickupDate": "Tue Dec 13 2022",
+    "rxDate": "2020-07-11",
+    "simpleDrugName": "TIRF",
+    "_id": "64c0358b7f9ffd23e64bebe1"
+  }
+]

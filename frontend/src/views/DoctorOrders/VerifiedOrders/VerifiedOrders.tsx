@@ -1,11 +1,11 @@
-import OrderCard from '../OrderCard/OrderCard';
+import OrderCard, { TabStatus } from '../OrderCard/OrderCard';
 import './VerifiedOrders.css';
 
 const VerifiedOrders = () => {
   return (
-    <div className='VerifiedOrders'>
-        <h1>VerifiedOrders</h1>
-        <OrderCard tabStatus = {'Approved'}/>
+    <div className="VerifiedOrders">
+      <h1>Verified Orders</h1>
+      <OrderCard tabStatus={TabStatus.Approved} />
     </div>
   );
 };

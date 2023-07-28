@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { doctorOrder, orderSchema } from '../database/schemas/doctorOrderSchemas.js';
+import { Order, orderSchema } from '../database/schemas/doctorOrderSchemas';
 import axios from 'axios';
 // XML Parsing Middleware used for NCPDP SCRIPT
 import bodyParser from 'body-parser';
@@ -21,9 +21,9 @@ router.use(bodyParser.urlencoded({ extended: false }));
  * Route: 'doctorOrders/api/getRx'
  * Description : 'Returns all documents in database for PIMS'
  */
-router.get('/api/getRx', async (req, res) => {
+router.get('/api/getRx', async (_req, res) => {
   //  finding all and adding it to the db
-  const order = await doctorOrder.find();
+  const order = await Order.find();
 
   console.log('Database return: ');
   console.log(order);
@@ -57,7 +57,7 @@ router.post('/api/addRx', async (req, res) => {
 router.patch('/api/updateRx/:id', async (req, res) => {
   try {
     // Finding by id
-    const order = await doctorOrder.findById(req.params.id).exec();
+    const order = await Order.findById(req.params.id).exec();
     console.log('found by id!');
 
     console.log('order', order);
@@ -85,7 +85,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     console.log(response.data);
 
     // Saving and updating
-    const newOrder = await doctorOrder.findOneAndUpdate(
+    const newOrder = await Order.findOneAndUpdate(
       { _id: req.params.id },
       { dispenseStatus: response.data.status, metRequirements: response.data.metRequirements },
       {
@@ -108,7 +108,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
  */
 router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
   try {
-    const newOrder = await doctorOrder.findOneAndUpdate(
+    const newOrder = await Order.findOneAndUpdate(
       { _id: req.params.id },
       { dispenseStatus: 'Picked Up' },
       {
@@ -150,7 +150,7 @@ router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (r
     }
   }
 
-  const prescription = await doctorOrder.findOne(searchDict).exec();
+  const prescription = await Order.findOne(searchDict).exec();
 
   console.log('GET DoctorOrder: ');
   console.log(prescription);
@@ -160,8 +160,8 @@ router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (r
 /**
  * Description : 'Deletes all documents and prescriptions in PIMS'
  */
-router.delete('/api/deleteAll', async (req, res) => {
-  await doctorOrder.deleteMany({});
+router.delete('/api/deleteAll', async (_req, res) => {
+  await Order.deleteMany({});
   console.log('All doctorOrders deleted in PIMS!');
   res.send([]);
 });
@@ -173,7 +173,7 @@ router.delete('/api/deleteAll', async (req, res) => {
  */
 function parseNCPDPScript(newRx) {
   // Parsing  XML NCPDP SCRIPT from EHR
-  var newOrder = new doctorOrder({
+  var newOrder = new Order({
     caseNumber: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
     patientName:
       newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName +
