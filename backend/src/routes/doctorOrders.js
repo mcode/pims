@@ -60,6 +60,12 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     const order = await doctorOrder.findById(req.params.id).exec();
     console.log('found by id!');
 
+    console.log('order', order);
+    if (order.dispenseStatus === 'Picked Up') {
+      console.log('Do not update prescription if it is picked up, it was verified before');
+      return;
+    }
+
     // Reaching out to REMS Admin finding by pt name and drug name
     // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
 
