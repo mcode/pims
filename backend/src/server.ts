@@ -27,7 +27,7 @@ async function main() {
   let server: any = app;
 
   if (env.USE_HTTPS) {
-    console.log("Enabling HTTPS HTTPS");
+    console.log('Enabling HTTPS HTTPS');
     const credentials = {
       key: fs.readFileSync(env.HTTPS_KEY_PATH),
       cert: fs.readFileSync(env.HTTPS_CERT_PATH)
