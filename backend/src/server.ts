@@ -33,7 +33,7 @@ async function main() {
       cert: fs.readFileSync(env.HTTPS_CERT_PATH)
     };
     server = https.createServer(credentials, app);
-  } 
+  }
 
   server.listen(port, () => console.log(`Listening on port ${port}`));
 
