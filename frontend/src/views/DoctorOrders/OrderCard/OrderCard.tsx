@@ -71,7 +71,7 @@ const OrderCard = (props: any) => {
 
   if (doctorOrder.length < 1) {
     return (
-      <Card>
+      <Card style={{padding: '15px' }}>
         <h1>No orders yet.</h1>
       </Card>
     );
