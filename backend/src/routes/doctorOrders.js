@@ -83,7 +83,11 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     // Saving and updating
     const newOrder = await doctorOrder.findOneAndUpdate(
       { _id: req.params.id },
-      { dispenseStatus: order.dispenseStatus === 'Picked Up' ? order.dispenseStatus : response.data.status, metRequirements: response.data.metRequirements },
+      {
+        dispenseStatus:
+          order.dispenseStatus === 'Picked Up' ? order.dispenseStatus : response.data.status,
+        metRequirements: response.data.metRequirements
+      },
       {
         new: true
       }
