@@ -56,6 +56,7 @@ router.post('/api/addRx', async (req, res) => {
  */
 router.patch('/api/updateRx/:id', async (req, res) => {
   try {
+    const dontUpdateStatusBool = req.query.dontUpdateStatus;
     // Finding by id
     const order = await doctorOrder.findById(req.params.id).exec();
     console.log('found by id!');
@@ -85,7 +86,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
       { _id: req.params.id },
       {
         dispenseStatus:
-          order.dispenseStatus === 'Picked Up' ? order.dispenseStatus : response.data.status,
+        dontUpdateStatusBool || order.dispenseStatus === 'Picked Up' ? order.dispenseStatus : response.data.status,
         metRequirements: response.data.metRequirements
       },
       {

@@ -54,7 +54,7 @@ const EtasuPopUp = (props: any) => {
   const handleClickOpen = () => {
     setOpen(true);
      // call api endpoint to update
-     const url = '/doctorOrders/api/updateRx/' + props.data._id; 
+     const url = '/doctorOrders/api/updateRx/' + props.data._id + '?dontUpdateStatus=true'; 
      axios.patch(url)
      .then(function (response) {
       const DoctorOrders = response.data;
