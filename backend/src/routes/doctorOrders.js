@@ -86,7 +86,9 @@ router.patch('/api/updateRx/:id', async (req, res) => {
       { _id: req.params.id },
       {
         dispenseStatus:
-        dontUpdateStatusBool || order.dispenseStatus === 'Picked Up' ? order.dispenseStatus : response.data.status,
+          dontUpdateStatusBool || order.dispenseStatus === 'Picked Up'
+            ? order.dispenseStatus
+            : response.data.status,
         metRequirements: response.data.metRequirements
       },
       {
