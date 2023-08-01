@@ -56,9 +56,12 @@ router.post('/api/addRx', async (req, res) => {
  */
 router.patch('/api/updateRx/:id', async (req, res) => {
   try {
+    const dontUpdateStatusBool = req.query.dontUpdateStatus;
     // Finding by id
     const order = await doctorOrder.findById(req.params.id).exec();
     console.log('found by id!');
+
+    console.log('order', order);
 
     // Reaching out to REMS Admin finding by pt name and drug name
     // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
@@ -81,7 +84,13 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     // Saving and updating
     const newOrder = await doctorOrder.findOneAndUpdate(
       { _id: req.params.id },
-      { dispenseStatus: response.data.status, metRequirements: response.data.metRequirements },
+      {
+        dispenseStatus:
+          dontUpdateStatusBool || order.dispenseStatus === 'Picked Up'
+            ? order.dispenseStatus
+            : response.data.status,
+        metRequirements: response.data.metRequirements
+      },
       {
         new: true
       }
@@ -187,7 +196,7 @@ function parseNCPDPScript(newRx) {
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Name.LastName,
     doctorContact:
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.PrimaryTelephone
-        .Number,
+        ?.Number,
     doctorID: newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Identification.NPI,
     doctorEmail:
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,

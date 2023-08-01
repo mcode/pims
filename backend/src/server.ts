@@ -5,6 +5,8 @@ const app = express();
 import cors from 'cors';
 import mongoose from 'mongoose';
 import env from 'var';
+import https from 'https';
+import fs from 'fs';
 
 //middleware and configurations
 import bodyParser from 'body-parser';
@@ -20,8 +22,20 @@ async function main() {
 
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cors(options));
-  app.listen(port, () => console.log(`Listening on port ${port}`));
   app.use('/doctorOrders', doctorOrders);
+
+  let server: any = app;
+
+  if (env.USE_HTTPS) {
+    console.log('Enabling HTTPS HTTPS');
+    const credentials = {
+      key: fs.readFileSync(env.HTTPS_KEY_PATH),
+      cert: fs.readFileSync(env.HTTPS_CERT_PATH)
+    };
+    server = https.createServer(credentials, app);
+  }
+
+  server.listen(port, () => console.log(`Listening on port ${port}`));
 
   const mongoHost = env.MONGO_URL;
 

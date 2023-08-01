@@ -42,7 +42,7 @@ const PickedUpButton = (props: any) => {
     };
 
     return (
-        <Button variant="contained" size="small" onClick={verifyOrder}>Mark as Picked</Button>
+        <Button variant="contained" size="small" onClick={verifyOrder}>Mark as Picked Up</Button>
     );
 };
 
