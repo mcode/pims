@@ -45,6 +45,7 @@ interface DoctorOrder {
 
 const OrderCard = (props: any) => {
   const [doctorOrder, setDoctorOrders] = useState<DoctorOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   //remove all doctorOrders
   const deleteAll = async () => {
@@ -64,12 +65,16 @@ const OrderCard = (props: any) => {
       .get(url)
       .then(function (response) {
         const allDoctorOrders = response.data;
+        setIsLoading(false);
         setDoctorOrders(allDoctorOrders);
       })
-      .catch(error => console.error(`Error: ${error}`));
+      .catch(error => {
+        setIsLoading(false);
+        console.error(`Error: ${error}`);
+      });
   };
 
-  if (doctorOrder.length < 1) {
+  if (doctorOrder.length < 1 && !isLoading) {
     return (
       <Card style={{padding: '15px' }}>
         <h1>No orders yet.</h1>
