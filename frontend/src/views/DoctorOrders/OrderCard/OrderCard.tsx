@@ -20,39 +20,6 @@ import './OrderCard.css';
 import PickedUpButton from './PickedUpButton';
 import VerifyButton from './VerifyButton';
 
-<<<<<<< Updated upstream
-interface DoctorOrder {
-  caseNumber?: string;
-  patientName?: string;
-  patientDOB?: string;
-  doctorName?: string;
-  doctorContact?: string;
-  doctorID?: string;
-  doctorEmail?: string;
-  drugNames?: string;
-  drugPrice?: number;
-  quanitities?: string;
-  total?: number;
-  pickupDate?: string;
-  dispenseStatus?: string;
-  metRequirements: {
-    stakeholderId: string;
-    completed: boolean;
-    metRequirementId: string;
-    requirementName: string;
-    requirementDescription: string;
-  }[];
-}
-
-const OrderCard = (props: any) => {
-  const [doctorOrder, setDoctorOrders] = useState<DoctorOrder[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  //remove all doctorOrders
-  const deleteAll = async () => {
-    const orders = await axios.delete('/doctorOrders/api/deleteAll');
-    setDoctorOrders(orders.data);
-=======
 export type DoctorOrder = {
   caseNumber: string;
   dispenseStatus: TabStatus;
@@ -93,7 +60,6 @@ const OrderCard = (props: OrderCardProps) => {
     // TODO: This endpoint should be renamed/updated to reflect that it mutates the MongoDB database and that it returns an empty array, because its current name doesn't reflect the latter.
     const response = await axios.delete('/doctorOrders/api/deleteAll');
     setDoctorOrders(response.data);
->>>>>>> Stashed changes
     console.log('Deleting all Doctor Orders');
   };
   const url = '/doctorOrders/api/getRx';
@@ -103,36 +69,6 @@ const OrderCard = (props: OrderCardProps) => {
     getAllDoctorOrders();
   }, []);
 
-<<<<<<< Updated upstream
-  const getAllDoctorOrders = async () => {
-   await axios
-      .get(url)
-      .then(function (response) {
-        const allDoctorOrders = response.data;
-        setIsLoading(false);
-        setDoctorOrders(allDoctorOrders);
-      })
-      .catch(error => {
-        setIsLoading(false);
-        console.error(`Error: ${error}`);
-      });
-  };
-
-  if (doctorOrder.length < 1 && !isLoading) {
-    return (
-      <Card style={{padding: '15px' }}>
-        <h1>No orders yet.</h1>
-      </Card>
-    );
-  } else {
-    return (
-      <Card sx={{ bgcolor: '#F5F5F7' }}>
-        {doctorOrder.map(row => (
-          <Card key={row.caseNumber} sx={{ minWidth: 275, margin: 2, boxShadow: '10px' }}>
-            {/* Checking dispense status for the right tab to display it correctly */}
-            {/* TODO: We should add an endpoint with the ability to fetch doctor orders based on the 
-            tab/dispense status instead of fetching all doctor orders and filtering them out on the frontend. */}
-=======
   const getAllDoctorOrders = () => {
     axios
       .get(url)
@@ -148,20 +84,10 @@ const OrderCard = (props: OrderCardProps) => {
         {doctorOrders.map(row => (
           <Card key={row.caseNumber} sx={{ minWidth: 275, margin: 2, boxShadow: '10px' }}>
             {/* TODO: We should add an endpoint with the ability to fetch doctor orders based on the tab/dispense status instead of fetching all doctor orders and filtering them out on the frontend. */}
->>>>>>> Stashed changes
             {props.tabStatus === row.dispenseStatus && (
               <Card>
                 <CardContent>
                   <Box>
-<<<<<<< Updated upstream
-                    <Typography variant="h5" component="div">
-                      {row.patientName}
-                    </Typography>
-                    <Typography variant="h5" component="div" color="text.secondary">
-                      DOB: {row.patientDOB}
-                    </Typography>
-                    <Typography component="div" sx={{ mb: 2 }} variant="h6">
-=======
                     <Typography variant="h5" component="div" data-testid="patientName">
                       {row.patientName}
                     </Typography>
@@ -174,7 +100,6 @@ const OrderCard = (props: OrderCardProps) => {
                       DOB: {row.patientDOB}
                     </Typography>
                     <Typography component="div" sx={{ mb: 2 }} variant="h6" data-testid="drugNames">
->>>>>>> Stashed changes
                       {row.drugNames}
                     </Typography>
                   </Box>
@@ -195,17 +120,6 @@ const OrderCard = (props: OrderCardProps) => {
                       </TableHead>
                       <TableBody>
                         <TableRow>
-<<<<<<< Updated upstream
-                          <TableCell align="left">{row.dispenseStatus}</TableCell>
-                          <TableCell align="right">{row.quanitities}</TableCell>
-                          <TableCell align="right">{row.drugPrice}</TableCell>
-                          <TableCell align="right">{row.total}</TableCell>
-                          <TableCell align="right">{row.doctorName}</TableCell>
-                          <TableCell align="right">{row.doctorID}</TableCell>
-                          <TableCell align="right">{row.doctorContact}</TableCell>
-                          <TableCell align="right">{row.doctorEmail}</TableCell>
-                          <TableCell align="right">{row.pickupDate}</TableCell>
-=======
                           <TableCell align="left" data-testid="dispenseStatus">
                             {row.dispenseStatus}
                           </TableCell>
@@ -233,7 +147,6 @@ const OrderCard = (props: OrderCardProps) => {
                           <TableCell align="right" data-testid="pickupDate">
                             {row.pickupDate}
                           </TableCell>
->>>>>>> Stashed changes
                         </TableRow>
                       </TableBody>
                     </Table>
@@ -242,19 +155,11 @@ const OrderCard = (props: OrderCardProps) => {
                 <CardActions>
                   <Box sx={{ marginLeft: 'auto', mr: '8px' }}>
                     <EtasuPopUp data={row} />
-<<<<<<< Updated upstream
-                    {props.tabStatus === 'Pending' && (
-                      <VerifyButton data={{ row, getAllDoctorOrders }} />
-                    )}
-                    {props.tabStatus === 'Approved' && (
-                      <PickedUpButton data={{ row, getAllDoctorOrders }} />
-=======
                     {props.tabStatus === TabStatus.Pending && (
                       <VerifyButton row={row} getAllDoctorOrders={getAllDoctorOrders} />
                     )}
                     {props.tabStatus === TabStatus.Approved && (
                       <PickedUpButton row={row} getAllDoctorOrders={getAllDoctorOrders} />
->>>>>>> Stashed changes
                     )}
                   </Box>
                 </CardActions>
@@ -272,11 +177,7 @@ const OrderCard = (props: OrderCardProps) => {
           }}
         >
           <Button
-<<<<<<< Updated upstream
-            onClick={deleteAll}
-=======
             onClick={deleteAllDoctorOrders}
->>>>>>> Stashed changes
             variant="outlined"
             color="error"
             size="small"

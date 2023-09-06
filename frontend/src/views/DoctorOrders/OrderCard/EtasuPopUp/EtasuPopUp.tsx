@@ -32,19 +32,8 @@ const EtasuPopUp = (props: EtasuPopUpProps) => {
 
   const handleClickOpen = () => {
     setOpen(true);
-<<<<<<< Updated upstream
-     // call api endpoint to update
-     const url = '/doctorOrders/api/updateRx/' + props.data._id + '?dontUpdateStatus=true'; 
-     axios.patch(url)
-     .then(function (response) {
-      const DoctorOrders = response.data;
-      //Adding data to state
-      getDoctorOrders(DoctorOrders);
-     })
-     .catch(error => console.error('Error: $(error'));
-=======
     // call api endpoint to update
-    const url = '/doctorOrders/api/updateRx/' + props.data._id;
+    const url = '/doctorOrders/api/updateRx/' + props.data._id + '?dontUpdateStatus=true';
     axios
       .patch(url)
       .then(function (response) {
@@ -53,7 +42,6 @@ const EtasuPopUp = (props: EtasuPopUpProps) => {
         getDoctorOrders(DoctorOrders);
       })
       .catch(error => console.error(`Error: ${error}`));
->>>>>>> Stashed changes
   };
 
   const handleClose = () => {
