@@ -60,8 +60,8 @@ const OrderCard = (props: any) => {
     getAllDoctorOrders();
   }, []);
 
-  const getAllDoctorOrders = () => {
-    axios
+  const getAllDoctorOrders = async () => {
+   await axios
       .get(url)
       .then(function (response) {
         const allDoctorOrders = response.data;
