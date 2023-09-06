@@ -1,9 +1,19 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import VerifiedOrders from './VerifiedOrders';
+import axios from 'axios';
 
-test('renders VerifiedOrders', async () => {
-  render(<VerifiedOrders />);
-  const linkElement = await screen.getByText(/VerifiedOrders/i);
-  expect(linkElement).toBeInTheDocument();
+
+jest.mock('axios');
+describe('<VerifiedOrders />', () => {
+
+  it('renders the order card with no doctor orders', async () => {
+    axios.get = jest.fn().mockImplementationOnce(() => Promise.resolve({ data: [] }));
+    render(<VerifiedOrders />);
+
+    await waitFor(() => {
+      const linkElement = screen.getByText(/VerifiedOrders/i);
+      expect(linkElement).toBeInTheDocument();
+    });
+  });
 });
