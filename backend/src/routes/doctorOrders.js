@@ -62,13 +62,6 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     console.log('found by id!');
 
     console.log('order', order);
-<<<<<<< Updated upstream
-=======
-    if (order.dispenseStatus === 'Picked Up') {
-      console.log('Do not update prescription if it is picked up, it was verified before');
-      return;
-    }
->>>>>>> Stashed changes
 
     // Reaching out to REMS Admin finding by pt name and drug name
     // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
