@@ -19,6 +19,8 @@ backend/dist
 .env.development.local
 .env.test.local
 .env.production.local
+.env
+env.json
 
 dist
 npm-debug.log*
@@ -31,3 +33,5 @@ frontend/server.cert
 
 backend/server.key
 backend/server.cert
+
+logs
