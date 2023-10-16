@@ -1,9 +1,10 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches: [ dev ]
+  pull_request:
+    branches: [ main, dev ]
   workflow_dispatch:
+
 
 jobs:
   docker-ci: 
@@ -12,6 +13,8 @@ jobs:
 
     - name: Checkout Repository
       uses: actions/checkout@v3
-      
+      with:
+          submodules: true
+
     - name: Test Server Docker image Builds
-      run: docker build -f Dockerfile.dev .
+      run: docker build .
