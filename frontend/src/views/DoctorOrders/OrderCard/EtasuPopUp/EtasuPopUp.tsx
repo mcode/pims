@@ -11,6 +11,14 @@ import axios from 'axios';
 import * as React from 'react';
 import { useState } from 'react';
 
+type MetRequirements = {
+  stakeholderId: string,
+  completed: boolean,
+  metRequirementId: string,
+  requirementName: string,
+  requirementDescription: string,
+  _id: string
+};
 
 interface DoctorOrder {
   caseNumber?: string;
@@ -26,14 +34,7 @@ interface DoctorOrder {
   total?: number;
   pickupDate?: string;
   dispenseStatus?: string;
-  metRequirements: {
-    stakeholderId: string,
-    completed: boolean,
-    metRequirementId: string,
-    requirementName: string,
-    requirementDescription: string,
-    _id: string
-  }[]
+  metRequirements: MetRequirements[]
 }
 
 const Transition = React.forwardRef(function Transition(
@@ -84,7 +85,18 @@ const EtasuPopUp = (props: any) => {
         <DialogContent>
           <DialogContentText component='div' id='alert-dialog-slide-description'>
             <Box>
-              {doctorOrder?.metRequirements.map((etasuElement) => 
+              {doctorOrder?.metRequirements
+                .sort(
+                  (first: MetRequirements, second: MetRequirements) => {
+                    // Keep the other forms unsorted.
+                    if (second.requirementName.includes('Patient Status Update')) {
+                      // Sort the Patient Status Update forms in descending order of timestamp.
+                      return second.requirementName.localeCompare(first.requirementName);
+                    }
+                    return 0;
+                  }
+                )
+                .map((etasuElement) => 
                 <Box key={etasuElement._id}>
                   <Typography component='div'>{etasuElement.requirementName}</Typography>
                   <Typography component='div'>{etasuElement.completed ? '✅'  : '❌'}</Typography>
