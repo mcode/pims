@@ -5,7 +5,6 @@ import axios from 'axios';
 
 jest.mock('axios');
 describe('<PickedUpOrders />', () => {
-
   it('renders the order card with no doctor orders', async () => {
     axios.get = jest.fn().mockImplementationOnce(() => Promise.resolve({ data: [] }));
     render(<PickedUpOrders />);

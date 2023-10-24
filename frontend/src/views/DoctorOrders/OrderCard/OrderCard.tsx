@@ -61,7 +61,7 @@ const OrderCard = (props: any) => {
   }, []);
 
   const getAllDoctorOrders = async () => {
-   await axios
+    await axios
       .get(url)
       .then(function (response) {
         const allDoctorOrders = response.data;
@@ -76,7 +76,7 @@ const OrderCard = (props: any) => {
 
   if (doctorOrder.length < 1 && !isLoading) {
     return (
-      <Card style={{padding: '15px' }}>
+      <Card style={{ padding: '15px' }}>
         <h1>No orders yet.</h1>
       </Card>
     );
