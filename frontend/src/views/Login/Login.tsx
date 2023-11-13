@@ -19,12 +19,10 @@ export default function Login() {
       params.append('grant_type', 'password');
       params.append('client_id', config.client);
       axios
-        .post(
-          `${config.auth}/realms/${config.realm}/protocol/openid-connect/token`,
-          params,
-          { withCredentials: true }
-        )
-        .then((result) => {
+        .post(`${config.auth}/realms/${config.realm}/protocol/openid-connect/token`, params, {
+          withCredentials: true
+        })
+        .then(result => {
           // do something with the token
           const scope = result.data.scope.split(' ').includes(config.scopeId);
           if (scope) {
@@ -44,53 +42,48 @@ export default function Login() {
   };
 
   return (
-    <Container component='main' maxWidth='xs'>
+    <Container component="main" maxWidth="xs">
       <CssBaseline />
       <Box
         sx={{
           marginTop: 8,
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
+          alignItems: 'center'
         }}
       >
-        {token ?
+        {token ? (
           <Avatar sx={{ m: 1, bgcolor: 'secondary.success' }}>
             <LockOpenOutlinedIcon />
           </Avatar>
-          :
+        ) : (
           <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
             <LockOutlinedIcon />
           </Avatar>
-        }
-        <Typography component='h1' variant='h5'>
+        )}
+        <Typography component="h1" variant="h5">
           Sign in
         </Typography>
-        <Box component='form' onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           <TextField
-            margin='normal'
+            margin="normal"
             fullWidth
-            id='email'
-            label='Username'
-            name='username'
-            autoComplete='username'
+            id="email"
+            label="Username"
+            name="username"
+            autoComplete="username"
             autoFocus
           />
           <TextField
-            margin='normal'
+            margin="normal"
             fullWidth
-            name='password'
-            label='Password'
-            type='password'
-            id='password'
-            autoComplete='current-password'
+            name="password"
+            label="Password"
+            type="password"
+            id="password"
+            autoComplete="current-password"
           />
-          <Button
-            type='submit'
-            fullWidth
-            variant='contained'
-            sx={{ mt: 3, mb: 2 }}
-          >
+          <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
             Sign In
           </Button>
         </Box>
