@@ -9,7 +9,7 @@ import VerifiedOrders from './VerifiedOrders/VerifiedOrders';
 function a11yProps(index: number) {
   return {
     id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
+    'aria-controls': `simple-tabpanel-${index}`
   };
 }
 
@@ -21,21 +21,22 @@ export default function DoctorOrders() {
   };
 
   return (
-    <Container maxWidth='xl'>
-      <Box sx={{
-        width: '100%',
-        border: 1,
-        borderRadius: '5px',
-        borderWidth: 4,
-        borderColor: '#F1F3F4',
-        backgroundColor: '#E7EBEF',
-
-      }}>
+    <Container maxWidth="xl">
+      <Box
+        sx={{
+          width: '100%',
+          border: 1,
+          borderRadius: '5px',
+          borderWidth: 4,
+          borderColor: '#F1F3F4',
+          backgroundColor: '#E7EBEF'
+        }}
+      >
         <Box sx={{ backgroundColor: '#F1F3F4', borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabIndex} onChange={handleChange} aria-label='basic tabs example' centered>
-            <Tab label='New Orders' {...a11yProps(0)} />
-            <Tab label='Verified Orders' {...a11yProps(1)} />
-            <Tab label='Picked Up Orders' {...a11yProps(2)} />
+          <Tabs value={tabIndex} onChange={handleChange} aria-label="basic tabs example" centered>
+            <Tab label="New Orders" {...a11yProps(0)} />
+            <Tab label="Verified Orders" {...a11yProps(1)} />
+            <Tab label="Picked Up Orders" {...a11yProps(2)} />
           </Tabs>
         </Box>
 
