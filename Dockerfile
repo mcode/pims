@@ -13,7 +13,10 @@ RUN npm install pm2 -g
 
 EXPOSE 5050
 EXPOSE 5051
-RUN apk add --no-cache curl
+RUN apk update 
+RUN apk upgrade
+RUN apk search curl 
+RUN apk add curl
 
 HEALTHCHECK --interval=60s --timeout=10m --retries=10 CMD curl --fail http://localhost:3000 || exit 1
 
