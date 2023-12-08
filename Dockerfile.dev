@@ -12,5 +12,8 @@ RUN npm install pm2 -g
 
 EXPOSE 5050
 EXPOSE 5051
+RUN apk add --no-cache curl
+
+HEALTHCHECK --interval=60s --timeout=10m --retries=10 CMD (rems-setup % curl --fail http://localhost:5051/doctorOrders/api/getRx && curl --fail http://localhost:5050)  || exit 1
 
 CMD ./dockerRunnerDev.sh
