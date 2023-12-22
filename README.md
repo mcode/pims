@@ -29,4 +29,7 @@ Once running both the frontend and backend systems, open [http://localhost:5050]
 
 ## Version
 
-This application requires node v20.0 or greater.
+This application requires node.js v20.0 or greater. Using [`nvm`](https://github.com/nvm-sh/nvm) is optional, but easier when managing different node.js versions.
+
+- `nvm install 20`
+- `nvm use 20` or `nvm use default 20`, as most of the REMS Integration Prototype repositories use node.js v20.0.
