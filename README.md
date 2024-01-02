@@ -2,11 +2,11 @@
 
 ## Setup
 
-The application is divided into a frontend and backend service. For an initial setup you will need to run `npm install` in both the frontend and backend subdirectories. This will install the dependencies required for each of the services.
+The application is divided into a frontend and backend service. For an initial setup run `npm install` in both the frontend and backend subdirectories. This will install the dependencies required for each of the services.
 
 ## Running backend and frontend
 
-Running the individual services can be done by either launching both of them independently or using pm2.
+Run the individual services by either launching both of them independently or using pm2 innately through Docker.
 
 ### Running independently
 
@@ -32,4 +32,4 @@ Once running both the frontend and backend systems, open [http://localhost:5050]
 This application requires node.js v20.0 or greater. Using [`nvm`](https://github.com/nvm-sh/nvm) is optional, but easier when managing different node.js versions.
 
 - `nvm install 20`
-- `nvm use 20` or `nvm use default 20`, as most of the REMS Integration Prototype repositories use node.js v20.0.
+- `nvm use 20` or `nvm use default 20`, as most of the REMS Integration Prototype repositories are compatible with node v20.0.
