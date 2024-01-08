@@ -6,6 +6,8 @@ import axios from 'axios';
 import bodyParser from 'body-parser';
 import bpx from 'body-parser-xml';
 import env from 'var';
+import buildRxStatus from '../ncpdpScriptBuilder/buildScript.v2017071.js';
+
 bpx(bodyParser);
 router.use(
   bodyParser.xml({
@@ -47,7 +49,12 @@ router.post('/api/addRx', async (req, res) => {
 
   console.log('POST DoctorOrder: ');
   console.log(newOrder);
-  res.send(newOrder);
+
+  var RxStatus = buildRxStatus(newOrder.caseNumber, newOrder.doctorName, newOrder.drugNames);
+  console.log('RxStatus:');
+  console.log(RxStatus);
+
+  res.send(RxStatus);
 });
 
 /**
