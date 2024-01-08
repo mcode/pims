@@ -21,7 +21,7 @@ export default function buildRxStatus(caseNumber, doctorName, drugNames) {
                             },
                             {
                                 'RelatesToMessageID': caseNumber // Placeholder: This is dependant on individual pharmacy, using Case Number 
-                            }, 
+                            },
                             {
                                 'Time': time
                             },
