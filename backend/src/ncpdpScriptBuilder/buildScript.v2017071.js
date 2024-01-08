@@ -5,34 +5,34 @@ export default function buildRxStatus(caseNumber, doctorName, drugNames) {
     var time = new Date();
     var rxStatus =
     {
-        "RxStatus": [
+        'RxStatus': [
             {
-                "Message": [
+                'Message': [
                     {
-                        "Header": [
+                        'Header': [
                             {
-                                "To": doctorName
+                                'To': doctorName
                             },
                             {
-                                "From": "Pharmacy" // Placeholder: This is dependant on individual pharmacy
+                                'From': 'Pharmacy' // Placeholder: This is dependant on individual pharmacy
                             },
                             {
-                                "Message": "NewRx Request Recieved For: " + drugNames
+                                'Message': 'NewRx Request Recieved For: ' + drugNames
                             },
                             {
-                                "RelatesToMessageID": caseNumber // Placeholder: This is dependant on individual pharmacy, using Case Number 
+                                'RelatesToMessageID': caseNumber // Placeholder: This is dependant on individual pharmacy, using Case Number 
                             }, 
                             {
-                                "Time": time
+                                'Time': time
                             },
                         ]
                     },
                     {
-                        "Body": [
+                        'Body': [
                             {
-                                "Status": [
+                                'Status': [
                                     {
-                                        "Code": "200" // Placeholder: This is dependant on individual pharmacy
+                                        'Code': '200' // Placeholder: This is dependant on individual pharmacy
                                     }
                                 ]
                             }
@@ -43,7 +43,7 @@ export default function buildRxStatus(caseNumber, doctorName, drugNames) {
             }
         ]
     };
-    const builder = new XMLBuilder({ oneListGroup: "true" });
+    const builder = new XMLBuilder({ oneListGroup: 'true' });
     var RxStatus = builder.build(rxStatus);
 
     return RxStatus;
