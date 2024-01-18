@@ -16,7 +16,7 @@ export default function buildRxStatus(caseNumber, doctorName, drugNames) {
                 From: 'Pharmacy' // Placeholder: This is dependant on individual pharmacy
               },
               {
-                Message: 'NewRx Request Recieved For: ' + drugNames
+                Message: 'NewRx Request Received For: ' + drugNames
               },
               {
                 RelatesToMessageID: caseNumber // Placeholder: This is dependant on individual pharmacy, using Case Number
