@@ -1,7 +1,6 @@
 /* NCPDP SCRIPT v2017071 Support */
 import { XMLBuilder } from 'fast-xml-parser';
 
-
 export default function buildRxStatus(newOrder) {
   var time = new Date();
   var rxStatus = {
@@ -49,7 +48,7 @@ export default function buildRxStatus(newOrder) {
   };
   const options = {
     ignoreAttributes: false,
-    attributeNamePrefix: "@@",
+    attributeNamePrefix: '@@',
     format: true,
     oneListGroup: 'true'
   };
