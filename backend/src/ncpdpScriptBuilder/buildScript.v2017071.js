@@ -15,7 +15,7 @@ export default function buildRxStatus(newOrder) {
           },
           {
             From: {
-              '#text': 'Pharmacy', // Placeholder: This is dependant on individual pharmacy
+              '#text': 'Pharmacy', // Placeholder: This is dependent on individual pharmacy
               '@@Qualifier': 'P'
             }
           },
@@ -23,7 +23,7 @@ export default function buildRxStatus(newOrder) {
             Message: 'NewRx Request Received For: ' + newOrder.drugNames
           },
           {
-            RelatesToMessageID: newOrder.caseNumber // Placeholder: This is dependant on individual pharmacy, using Case Number
+            RelatesToMessageID: newOrder.caseNumber // Placeholder: This is dependent on individual pharmacy, using Case Number
           },
           {
             SentTime: time.toISOString()
@@ -38,7 +38,7 @@ export default function buildRxStatus(newOrder) {
           {
             Status: [
               {
-                Code: '000' // Placeholder: This is dependant on individual pharmacy
+                Code: '000' // Placeholder: This is dependent on individual pharmacy
               }
             ]
           }
