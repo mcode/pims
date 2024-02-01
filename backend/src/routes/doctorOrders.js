@@ -50,7 +50,7 @@ router.post('/api/addRx', async (req, res) => {
   console.log('POST DoctorOrder: ');
   console.log(newOrder);
 
-  var RxStatus = buildRxStatus(newOrder.caseNumber, newOrder.doctorName, newOrder.drugNames);
+  var RxStatus = buildRxStatus(newOrder);
   console.log('RxStatus:');
   console.log(RxStatus);
 
@@ -185,6 +185,7 @@ function parseNCPDPScript(newRx) {
   // Parsing  XML NCPDP SCRIPT from EHR
   var newOrder = new doctorOrder({
     caseNumber: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
+    prescriberOrderNumber: newRx.Message.Header.PrescriberOrderNumber,
     patientName:
       newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName +
       ' ' +

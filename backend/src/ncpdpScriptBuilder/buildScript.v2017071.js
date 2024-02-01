@@ -1,39 +1,44 @@
 /* NCPDP SCRIPT v2017071 Support */
 import { XMLBuilder } from 'fast-xml-parser';
 
-export default function buildRxStatus(caseNumber, doctorName, drugNames) {
+export default function buildRxStatus(newOrder) {
   var time = new Date();
   var rxStatus = {
-    RxStatus: [
+    Message: [
       {
-        Message: [
+        Header: [
           {
-            Header: [
-              {
-                To: doctorName
-              },
-              {
-                From: 'Pharmacy' // Placeholder: This is dependant on individual pharmacy
-              },
-              {
-                Message: 'NewRx Request Received For: ' + drugNames
-              },
-              {
-                RelatesToMessageID: caseNumber // Placeholder: This is dependant on individual pharmacy, using Case Number
-              },
-              {
-                Time: time
-              }
-            ]
+            To: {
+              '#text': newOrder.doctorID,
+              '@@Qualifier': 'C'
+            }
           },
           {
-            Body: [
+            From: {
+              '#text': 'Pharmacy', // Placeholder: This is dependent on individual pharmacy
+              '@@Qualifier': 'P'
+            }
+          },
+          {
+            Message: 'NewRx Request Received For: ' + newOrder.drugNames
+          },
+          {
+            RelatesToMessageID: newOrder.caseNumber // Placeholder: This is dependent on individual pharmacy, using Case Number
+          },
+          {
+            SentTime: time.toISOString()
+          },
+          {
+            PrescriberOrderNumber: newOrder.prescriberOrderNumber
+          }
+        ]
+      },
+      {
+        Body: [
+          {
+            Status: [
               {
-                Status: [
-                  {
-                    Code: '200' // Placeholder: This is dependant on individual pharmacy
-                  }
-                ]
+                Code: '000' // Placeholder: This is dependent on individual pharmacy
               }
             ]
           }
@@ -41,7 +46,13 @@ export default function buildRxStatus(caseNumber, doctorName, drugNames) {
       }
     ]
   };
-  const builder = new XMLBuilder({ oneListGroup: 'true' });
+  const options = {
+    ignoreAttributes: false,
+    attributeNamePrefix: '@@',
+    format: true,
+    oneListGroup: 'true'
+  };
+  const builder = new XMLBuilder(options);
   var RxStatus = builder.build(rxStatus);
 
   return RxStatus;
