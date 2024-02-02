@@ -30,7 +30,7 @@ interface DoctorOrder {
   doctorEmail?: string;
   drugNames?: string;
   drugPrice?: number;
-  quanitities?: string;
+  quantities?: string;
   total?: number;
   pickupDate?: string;
   dispenseStatus?: string;
@@ -120,7 +120,7 @@ const OrderCard = (props: any) => {
                       <TableBody>
                         <TableRow>
                           <TableCell align="left">{row.dispenseStatus}</TableCell>
-                          <TableCell align="right">{row.quanitities}</TableCell>
+                          <TableCell align="right">{row.quantities}</TableCell>
                           <TableCell align="right">{row.drugPrice}</TableCell>
                           <TableCell align="right">{row.total}</TableCell>
                           <TableCell align="right">{row.doctorName}</TableCell>
