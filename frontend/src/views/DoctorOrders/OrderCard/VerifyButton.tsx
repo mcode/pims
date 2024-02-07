@@ -11,7 +11,7 @@ const VerifyButton = (props: any) => {
         props.data.getAllDoctorOrders();
         console.log(response.data);
       })
-      .catch(error => console.error('Error: $(error'));
+      .catch(error => console.error('Error', error));
   };
 
   return (
