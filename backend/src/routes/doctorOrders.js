@@ -147,14 +147,13 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
       prescriberOrderNumber: prescriberOrderNumber
     });
     const rxFill = buildRxFill(newRx);
-    console.log('RxFill', rxFill);
     const status = await axios.post(env.EHR_RXFILL_URL, rxFill, {
       headers: {
         Accept: 'application/xml', // Expect that the Status that the EHR returns back is in XML
         'Content-Type': 'application/xml' // Tell the EHR that the RxFill is in XML
       }
     });
-    console.log('Sent RxFill to EHR and received status from EHR', status);
+    console.log('Sent RxFill to EHR and received status from EHR', status.data);
   } catch (error) {
     console.log('Could not send RxFill to EHR', error);
     return error;

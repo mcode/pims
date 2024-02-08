@@ -62,6 +62,7 @@ export function buildRxStatus(newRxMessageConvertedToJSON) {
 export const buildRxFill = newRx => {
   const { Message } = JSON.parse(newRx.serializedJSON);
   const { Header, Body } = Message;
+  console.log('Message', Message);
   const time = new Date();
   const message = {
     Message: {
@@ -91,29 +92,13 @@ export const buildRxFill = newRx => {
                 Note: PICKED_UP
               }
             },
-            Patient: {
-              HumanPatient: {
-                Name: {
-                  LastName: Body.NewRx.Patient.HumanPatient.Name.LastName,
-                  FirstName: Body.NewRx.Patient.HumanPatient.Name.FirstName
-                },
-                Gender: Body.NewRx.Patient.HumanPatient.Gender,
-                DateOfBirth: { Date: Body.NewRx.Patient.HumanPatient.DateOfBirth.Date },
-                Address: {
-                  AddressLine1: Body.NewRx.Patient.HumanPatient.Address.AddressLine1,
-                  City: Body.NewRx.Patient.HumanPatient.Address.City,
-                  StateProvince: Body.NewRx.Patient.HumanPatient.Address.StateProvince,
-                  PostalCode: Body.NewRx.Patient.HumanPatient.Address.PostalCode,
-                  Country: Body.NewRx.Patient.HumanPatient.Address.Country
-                }
-              }
-            },
+            Patient: Body.NewRx.Patient,
             Pharmacy: {
               Identification: {
                 NCPDPID: MOCK_VALUE,
                 NPI: MOCK_VALUE
               },
-              BusinessName: MOCK_VALUE,
+              BusinessName: Header.To._,
               Address: {
                 AddressLine1: MOCK_VALUE,
                 City: MOCK_VALUE,
@@ -127,52 +112,8 @@ export const buildRxFill = newRx => {
                 }
               }
             },
-            Prescriber: {
-              NonVeterinarian: {
-                Identification: Body.NewRx.Prescriber.NonVeterinarian.Identification.NPI
-              },
-              Name: {
-                LastName: Body.NewRx.Prescriber.NonVeterinarian.Name.LastName,
-                FirstName: Body.NewRx.Prescriber.NonVeterinarian.Name.FirstName
-              },
-              Address: {
-                AddressLine1: Body.NewRx.Prescriber.NonVeterinarian.Address.AddressLine1,
-                City: Body.NewRx.Prescriber.NonVeterinarian.Address.City,
-                StateProvince: Body.NewRx.Prescriber.NonVeterinarian.Address.StateProvince,
-                PostalCode: Body.NewRx.Prescriber.NonVeterinarian.Address.PostalCode,
-                Country: Body.NewRx.Prescriber.NonVeterinarian.Address.Country
-              },
-              CommunicationNumbers: {
-                PrimaryTelephone: {
-                  Number:
-                    Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.PrimaryTelephone
-                      .Number
-                },
-                ElectronicMail:
-                  Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail
-              }
-            },
-            MedicationPrescribed: {
-              DrugDescription: Body.NewRx.MedicationPrescribed.DrugDescription,
-              DrugCoded: {
-                ProductCode: {
-                  Code: Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode.Code,
-                  Qualifier: Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode.Qualifier
-                }
-              },
-              Quantity: {
-                Value: Body.NewRx.MedicationPrescribed.Quantity.Value,
-                CodeListQuantifier: Body.NewRx.MedicationPrescribed.Quantity.CodeListQuantifier,
-                QuantityUnitOfMeasure: {
-                  Code: Body.NewRx.MedicationPrescribed.Quantity.QuantityUnitOfMeasure.Code
-                },
-                WrittenDate: { Date: Body.NewRx.MedicationPrescribed.WrittenDate.Date },
-                Substitutions: Body.NewRx.MedicationPrescribed.Substitutions,
-                NumberOfRefills: Body.NewRx.MedicationPrescribed.NumberOfRefills,
-                Sig: { SigText: Body.NewRx.MedicationPrescribed.Sig.SigText },
-                PrescriberCheckedREMS: Body.NewRx.MedicationPrescribed.PrescriberCheckedREMS
-              }
-            }
+            Prescriber: Body.NewRx.Prescriber,
+            MedicationPrescribed: Body.NewRx.MedicationPrescribed
           }
         }
       ]
