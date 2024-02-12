@@ -28,8 +28,7 @@ router.get('/api/getRx', async (req, res) => {
   //  finding all and adding it to the db
   const order = await doctorOrder.find();
 
-  console.log('Database return: ');
-  console.log(order);
+  console.log('Database returned with order');
   res.json(order);
 });
 
@@ -48,6 +47,7 @@ router.post('/api/addRx', async (req, res) => {
       serializedJSON: JSON.stringify(newRxMessageConvertedToJSON)
     });
     await newRx.save();
+    console.log('Saved NewRx');
   } catch (error) {
     console.log('Could not store the NewRx', error);
     return error;
@@ -55,17 +55,15 @@ router.post('/api/addRx', async (req, res) => {
 
   try {
     await newOrder.save();
+    console.log('DoctorOrder was saved');
   } catch (error) {
     console.log('ERROR! duplicate found, prescription already exists', error);
     return error;
   }
 
-  console.log('POST DoctorOrder: ', newOrder);
-
   const RxStatus = buildRxStatus(newRxMessageConvertedToJSON);
-  console.log('RxStatus:', RxStatus);
-
   res.send(RxStatus);
+  console.log('Sent RxStatus');
 });
 
 /**
@@ -77,9 +75,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     const dontUpdateStatusBool = req.query.dontUpdateStatus;
     // Finding by id
     const order = await doctorOrder.findById(req.params.id).exec();
-    console.log('found by id!');
-
-    console.log('Current order', order);
+    console.log('Found doctor order by id!');
 
     // Reaching out to REMS Admin finding by pt name and drug name
     // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
@@ -95,9 +91,8 @@ router.patch('/api/updateRx/:id', async (req, res) => {
       order.patientDOB +
       '/drug/' +
       order.simpleDrugName;
-    console.log(url);
     const response = await axios.get(url);
-    console.log(response.data);
+    console.log('Retrieved order');
 
     // Saving and updating
     const newOrder = await doctorOrder.findOneAndUpdate(
@@ -115,7 +110,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     );
 
     res.send(newOrder);
-    console.log('Updated order', newOrder);
+    console.log('Updated order');
   } catch (error) {
     console.log('Error', error);
     return error;
@@ -136,6 +131,7 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
     );
     res.send(newOrder);
     prescriberOrderNumber = newOrder.prescriberOrderNumber;
+    console.log('Updated dispense status to picked up');
   } catch (error) {
     console.log('Could not update dispense status', error);
     return error;
@@ -186,9 +182,8 @@ router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (r
   }
 
   const prescription = await doctorOrder.findOne(searchDict).exec();
+  console.log('Found doctor order');
 
-  console.log('GET DoctorOrder: ');
-  console.log(prescription);
   res.send(prescription);
 });
 
@@ -197,7 +192,7 @@ router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (r
  */
 router.delete('/api/deleteAll', async (req, res) => {
   await doctorOrder.deleteMany({});
-  console.log('All doctorOrders deleted in PIMS!');
+  console.log('All doctor orders deleted in PIMS!');
   await NewRx.deleteMany({});
   console.log("All NewRx's deleted in PIMS!");
   res.send([]);
