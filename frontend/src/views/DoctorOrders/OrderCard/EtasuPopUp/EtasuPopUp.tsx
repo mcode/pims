@@ -62,7 +62,7 @@ const EtasuPopUp = (props: any) => {
         //Adding data to state
         getDoctorOrders(DoctorOrders);
       })
-      .catch(error => console.error('Error: $(error'));
+      .catch(error => console.error('Error', error));
   };
 
   const handleClose = () => {

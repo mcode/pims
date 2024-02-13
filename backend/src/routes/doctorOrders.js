@@ -6,7 +6,8 @@ import axios from 'axios';
 import bodyParser from 'body-parser';
 import bpx from 'body-parser-xml';
 import env from 'var';
-import buildRxStatus from '../ncpdpScriptBuilder/buildScript.v2017071.js';
+import { buildRxStatus, buildRxFill } from '../ncpdpScriptBuilder/buildScript.v2017071.js';
+import { NewRx } from '../database/schemas/newRx.js';
 
 bpx(bodyParser);
 router.use(
@@ -27,8 +28,7 @@ router.get('/api/getRx', async (req, res) => {
   //  finding all and adding it to the db
   const order = await doctorOrder.find();
 
-  console.log('Database return: ');
-  console.log(order);
+  console.log('Database returned with order');
   res.json(order);
 });
 
@@ -38,23 +38,32 @@ router.get('/api/getRx', async (req, res) => {
  */
 router.post('/api/addRx', async (req, res) => {
   // Parsing incoming NCPDP SCRIPT XML to doctorOrder JSON
-  const newOrder = parseNCPDPScript(req.body);
+  const newRxMessageConvertedToJSON = req.body;
+  const newOrder = parseNCPDPScript(newRxMessageConvertedToJSON);
 
   try {
-    await newOrder.save(); //updating the object or adding to it
+    const newRx = new NewRx({
+      prescriberOrderNumber: newRxMessageConvertedToJSON.Message.Header.PrescriberOrderNumber,
+      serializedJSON: JSON.stringify(newRxMessageConvertedToJSON)
+    });
+    await newRx.save();
+    console.log('Saved NewRx');
   } catch (error) {
-    console.log('ERROR! duplicate found, prescription already exists');
+    console.log('Could not store the NewRx', error);
     return error;
   }
 
-  console.log('POST DoctorOrder: ');
-  console.log(newOrder);
+  try {
+    await newOrder.save();
+    console.log('DoctorOrder was saved');
+  } catch (error) {
+    console.log('ERROR! duplicate found, prescription already exists', error);
+    return error;
+  }
 
-  var RxStatus = buildRxStatus(newOrder);
-  console.log('RxStatus:');
-  console.log(RxStatus);
-
+  const RxStatus = buildRxStatus(newRxMessageConvertedToJSON);
   res.send(RxStatus);
+  console.log('Sent RxStatus');
 });
 
 /**
@@ -66,9 +75,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     const dontUpdateStatusBool = req.query.dontUpdateStatus;
     // Finding by id
     const order = await doctorOrder.findById(req.params.id).exec();
-    console.log('found by id!');
-
-    console.log('order', order);
+    console.log('Found doctor order by id!');
 
     // Reaching out to REMS Admin finding by pt name and drug name
     // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
@@ -84,9 +91,8 @@ router.patch('/api/updateRx/:id', async (req, res) => {
       order.patientDOB +
       '/drug/' +
       order.simpleDrugName;
-    console.log(url);
     const response = await axios.get(url);
-    console.log(response.data);
+    console.log('Retrieved order');
 
     // Saving and updating
     const newOrder = await doctorOrder.findOneAndUpdate(
@@ -102,37 +108,52 @@ router.patch('/api/updateRx/:id', async (req, res) => {
         new: true
       }
     );
-    console.log('NEWORDER');
-    console.log(newOrder);
+
     res.send(newOrder);
+    console.log('Updated order');
   } catch (error) {
-    console.log('ERROR!');
-    console.log(error);
+    console.log('Error', error);
     return error;
   }
 });
 
 /**
- * Route: 'doctorOrders//api/updateRx/:id/pickedUp'
+ * Route: 'doctorOrders/api/updateRx/:id/pickedUp'
  * Description : 'Updates prescription dispense status based on mongo id to be picked up '
  */
 router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
+  let prescriberOrderNumber = null;
   try {
     const newOrder = await doctorOrder.findOneAndUpdate(
       { _id: req.params.id },
       { dispenseStatus: 'Picked Up' },
-      {
-        new: true
-      }
+      { new: true }
     );
     res.send(newOrder);
+    prescriberOrderNumber = newOrder.prescriberOrderNumber;
+    console.log('Updated dispense status to picked up');
   } catch (error) {
-    console.log(error);
-    console.log('ERROR! Could not find id');
+    console.log('Could not update dispense status', error);
     return error;
   }
 
-  // console.log(newOrder);
+  try {
+    // Reach out to EHR to update dispense status as XML
+    const newRx = await NewRx.findOne({
+      prescriberOrderNumber: prescriberOrderNumber
+    });
+    const rxFill = buildRxFill(newRx);
+    const status = await axios.post(env.EHR_RXFILL_URL, rxFill, {
+      headers: {
+        Accept: 'application/xml', // Expect that the Status that the EHR returns back is in XML
+        'Content-Type': 'application/xml' // Tell the EHR that the RxFill is in XML
+      }
+    });
+    console.log('Sent RxFill to EHR and received status from EHR', status.data);
+  } catch (error) {
+    console.log('Could not send RxFill to EHR', error);
+    return error;
+  }
 });
 
 /**
@@ -161,9 +182,8 @@ router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (r
   }
 
   const prescription = await doctorOrder.findOne(searchDict).exec();
+  console.log('Found doctor order');
 
-  console.log('GET DoctorOrder: ');
-  console.log(prescription);
   res.send(prescription);
 });
 
@@ -172,7 +192,9 @@ router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (r
  */
 router.delete('/api/deleteAll', async (req, res) => {
   await doctorOrder.deleteMany({});
-  console.log('All doctorOrders deleted in PIMS!');
+  console.log('All doctor orders deleted in PIMS!');
+  await NewRx.deleteMany({});
+  console.log("All NewRx's deleted in PIMS!");
   res.send([]);
 });
 
@@ -213,7 +235,7 @@ function parseNCPDPScript(newRx) {
     drugNdcCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode.Code,
     rxDate: newRx.Message.Body.NewRx.MedicationPrescribed.WrittenDate.Date,
     drugPrice: 200, // Add later?
-    quanitities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
+    quantities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
     total: 1800,
     pickupDate: 'Tue Dec 13 2022', // Add later?
     dispenseStatus: 'Pending',
