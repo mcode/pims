@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 export const orderSchema = new mongoose.Schema({
   caseNumber: String,
+  prescriberOrderNumber: String,
   patientName: String,
   patientFirstName: String,
   patientLastName: String,
@@ -18,7 +19,7 @@ export const orderSchema = new mongoose.Schema({
   rxDate: String,
   drugPrice: Number,
   drugNdcCode: String,
-  quanitities: String,
+  quantities: String,
   total: Number,
   pickupDate: String,
   dispenseStatus: String,

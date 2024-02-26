@@ -24,7 +24,7 @@ const doctorOrders = [
     patientPostalCode: '00008',
     patientStateProvince: 'Westeros',
     pickupDate: 'Tue Dec 13 2022',
-    quanitities: '90',
+    quantities: '90',
     rxDate: '2020-07-11',
     simpleDrugName: 'Turalio',
     total: 1800

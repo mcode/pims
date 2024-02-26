@@ -1,39 +1,52 @@
 /* NCPDP SCRIPT v2017071 Support */
 import { XMLBuilder } from 'fast-xml-parser';
+import { v4 as uuidv4 } from 'uuid';
 
-export default function buildRxStatus(caseNumber, doctorName, drugNames) {
-  var time = new Date();
-  var rxStatus = {
-    RxStatus: [
+const MOCK_VALUE = 'MOCK_VALUE';
+const PICKED_UP = 'Picked up';
+
+const XML_BUILDER_OPTIONS = {
+  ignoreAttributes: false,
+  attributeNamePrefix: '@@',
+  format: true,
+  oneListGroup: 'true'
+};
+
+export function buildRxStatus(newRxMessageConvertedToJSON) {
+  const { Message } = newRxMessageConvertedToJSON;
+  const { Header, Body } = Message;
+  const time = new Date();
+  const rxStatus = {
+    Message: [
       {
-        Message: [
+        Header: [
           {
-            Header: [
-              {
-                To: doctorName
-              },
-              {
-                From: 'Pharmacy' // Placeholder: This is dependant on individual pharmacy
-              },
-              {
-                Message: 'NewRx Request Recieved For: ' + drugNames
-              },
-              {
-                RelatesToMessageID: caseNumber // Placeholder: This is dependant on individual pharmacy, using Case Number
-              },
-              {
-                Time: time
-              }
-            ]
+            To: {
+              '#text': Header.To._,
+              '@@Qualifier': Header.To.$.Qualifier
+            }
           },
           {
-            Body: [
+            From: {
+              '#text': Header.From._,
+              '@@Qualifier': Header.From.$.Qualifier
+            }
+          },
+          {
+            Message:
+              'NewRx Request Received For: ' + Body.NewRx.MedicationPrescribed.DrugDescription
+          },
+          { RelatesToMessageID: Header.MessageID },
+          { SentTime: time.toISOString() },
+          { PrescriberOrderNumber: Header.PrescriberOrderNumber }
+        ]
+      },
+      {
+        Body: [
+          {
+            Status: [
               {
-                Status: [
-                  {
-                    Code: '200' // Placeholder: This is dependant on individual pharmacy
-                  }
-                ]
+                Code: '000' // Placeholder: This is dependent on individual pharmacy
               }
             ]
           }
@@ -41,8 +54,71 @@ export default function buildRxStatus(caseNumber, doctorName, drugNames) {
       }
     ]
   };
-  const builder = new XMLBuilder({ oneListGroup: 'true' });
-  var RxStatus = builder.build(rxStatus);
 
-  return RxStatus;
+  const builder = new XMLBuilder(XML_BUILDER_OPTIONS);
+  return builder.build(rxStatus);
 }
+
+export const buildRxFill = newRx => {
+  const { Message } = JSON.parse(newRx.serializedJSON);
+  const { Header, Body } = Message;
+  console.log('Message', Message);
+  const time = new Date();
+  const message = {
+    Message: {
+      Header: [
+        {
+          To: {
+            '#text': Header.From._,
+            '@@Qualifier': Header.From.$.Qualifier
+          }
+        },
+        {
+          From: {
+            '#text': Header.To._,
+            '@@Qualifier': Header.To.$.Qualifier
+          }
+        },
+        { MessageID: uuidv4() },
+        { RelatesToMessageID: Header.MessageID },
+        { SentTime: time.toISOString() },
+        { PrescriberOrderNumber: Header.PrescriberOrderNumber }
+      ],
+      Body: [
+        {
+          RxFill: {
+            FillStatus: {
+              Dispensed: {
+                Note: PICKED_UP
+              }
+            },
+            Patient: Body.NewRx.Patient,
+            Pharmacy: {
+              Identification: {
+                NCPDPID: MOCK_VALUE,
+                NPI: MOCK_VALUE
+              },
+              BusinessName: Header.To._,
+              Address: {
+                AddressLine1: MOCK_VALUE,
+                City: MOCK_VALUE,
+                StateProvince: MOCK_VALUE,
+                PostalCode: MOCK_VALUE,
+                Country: MOCK_VALUE
+              },
+              CommunicationNumbers: {
+                PrimaryTelephone: {
+                  Number: MOCK_VALUE
+                }
+              }
+            },
+            Prescriber: Body.NewRx.Prescriber,
+            MedicationPrescribed: Body.NewRx.MedicationPrescribed
+          }
+        }
+      ]
+    }
+  };
+  const builder = new XMLBuilder(XML_BUILDER_OPTIONS);
+  return builder.build(message);
+};
