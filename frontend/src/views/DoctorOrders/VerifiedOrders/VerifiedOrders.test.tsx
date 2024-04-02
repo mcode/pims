@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import VerifiedOrders from './VerifiedOrders';
 import axios from 'axios';
@@ -10,7 +9,7 @@ describe('<VerifiedOrders />', () => {
     render(<VerifiedOrders />);
 
     await waitFor(() => {
-      const linkElement = screen.getByText(/VerifiedOrders/i);
+      const linkElement = screen.getByText(/verified orders/i);
       expect(linkElement).toBeInTheDocument();
     });
   });
