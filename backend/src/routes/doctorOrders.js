@@ -85,11 +85,15 @@ router.patch('/api/updateRx/:id', async (req, res) => {
           resource: {
             resourceType: 'Patient',
             id: order.prescriberOrderNumber,
-            name: [{
-              family: order.patientLastName, given: order.patientName.split(' '), use: 'official'
-            }],
-            birthDate: order.patientDOB,
-          },
+            name: [
+              {
+                family: order.patientLastName,
+                given: order.patientName.split(' '),
+                use: 'official'
+              }
+            ],
+            birthDate: order.patientDOB
+          }
         },
         {
           name: 'medication',
@@ -97,7 +101,13 @@ router.patch('/api/updateRx/:id', async (req, res) => {
             resourceType: 'Medication',
             id: order.prescriberOrderNumber,
             code: {
-              coding: [{system: 'http://www.nlm.nih.gov/research/umls/rxnorm', code: order.drugRxnormCode, display: order.drugNames}]
+              coding: [
+                {
+                  system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+                  code: order.drugRxnormCode,
+                  display: order.drugNames
+                }
+              ]
             }
           }
         }

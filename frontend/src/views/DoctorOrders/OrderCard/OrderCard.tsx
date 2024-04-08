@@ -36,14 +36,14 @@ interface DoctorOrder {
   dispenseStatus?: string;
   metRequirements: {
     name: string;
-    resource: { 
-      status: string,
-      moduleUri: string,
-      resourceType: string,
-      note: [ { text: string }],
+    resource: {
+      status: string;
+      moduleUri: string;
+      resourceType: string;
+      note: [{ text: string }];
       subject: {
-        reference: string 
-      }
+        reference: string;
+      };
     };
   }[];
 }

@@ -25,15 +25,15 @@ export const orderSchema = new mongoose.Schema({
   pickupDate: String,
   dispenseStatus: String,
   metRequirements: [
-    { 
+    {
       name: String,
-      resource: { 
+      resource: {
         status: String,
         moduleUri: String,
         resourceType: String,
-        note: [ { text: String }],
+        note: [{ text: String }],
         subject: {
-          reference: String 
+          reference: String
         }
       }
     }

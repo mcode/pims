@@ -13,14 +13,14 @@ import { useState } from 'react';
 
 type MetRequirements = {
   name: string;
-  resource: { 
-    status: string,
-    moduleUri: string,
-    resourceType: string,
-    note: [ { text: string }],
+  resource: {
+    status: string;
+    moduleUri: string;
+    resourceType: string;
+    note: [{ text: string }];
     subject: {
-      reference: string 
-    }
+      reference: string;
+    };
   };
 };
 
@@ -102,7 +102,9 @@ const EtasuPopUp = (props: any) => {
                 .map(etasuElement => (
                   <Box key={etasuElement.name}>
                     <Typography component="div">{etasuElement.name}</Typography>
-                    <Typography component="div">{etasuElement.resource.status === 'success' ? '✅' : '❌'}</Typography>
+                    <Typography component="div">
+                      {etasuElement.resource.status === 'success' ? '✅' : '❌'}
+                    </Typography>
                   </Box>
                 ))}
             </Box>
