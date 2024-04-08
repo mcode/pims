@@ -35,11 +35,16 @@ interface DoctorOrder {
   pickupDate?: string;
   dispenseStatus?: string;
   metRequirements: {
-    stakeholderId: string;
-    completed: boolean;
-    metRequirementId: string;
-    requirementName: string;
-    requirementDescription: string;
+    name: string;
+    resource: { 
+      status: string,
+      moduleUri: string,
+      resourceType: string,
+      note: [ { text: string }],
+      subject: {
+        reference: string 
+      }
+    };
   }[];
 }
 

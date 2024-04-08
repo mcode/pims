@@ -19,17 +19,23 @@ export const orderSchema = new mongoose.Schema({
   rxDate: String,
   drugPrice: Number,
   drugNdcCode: String,
+  drugRxnormCode: String,
   quantities: String,
   total: Number,
   pickupDate: String,
   dispenseStatus: String,
   metRequirements: [
-    {
-      stakeholderId: String,
-      completed: Boolean,
-      metRequirementId: String,
-      requirementName: String,
-      requirementDescription: String
+    { 
+      name: String,
+      resource: { 
+        status: String,
+        moduleUri: String,
+        resourceType: String,
+        note: [ { text: String }],
+        subject: {
+          reference: String 
+        }
+      }
     }
   ]
 });

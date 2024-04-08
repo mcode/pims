@@ -12,12 +12,16 @@ import * as React from 'react';
 import { useState } from 'react';
 
 type MetRequirements = {
-  stakeholderId: string;
-  completed: boolean;
-  metRequirementId: string;
-  requirementName: string;
-  requirementDescription: string;
-  _id: string;
+  name: string;
+  resource: { 
+    status: string,
+    moduleUri: string,
+    resourceType: string,
+    note: [ { text: string }],
+    subject: {
+      reference: string 
+    }
+  };
 };
 
 interface DoctorOrder {
@@ -30,6 +34,7 @@ interface DoctorOrder {
   doctorEmail?: string;
   drugNames?: string;
   drugPrice?: number;
+  drugRxnormCode: number;
   quanitities?: string;
   total?: number;
   pickupDate?: string;
@@ -88,16 +93,16 @@ const EtasuPopUp = (props: any) => {
               {doctorOrder?.metRequirements
                 .sort((first: MetRequirements, second: MetRequirements) => {
                   // Keep the other forms unsorted.
-                  if (second.requirementName.includes('Patient Status Update')) {
+                  if (second.name.includes('Patient Status Update')) {
                     // Sort the Patient Status Update forms in descending order of timestamp.
-                    return second.requirementName.localeCompare(first.requirementName);
+                    return second.name.localeCompare(first.name);
                   }
                   return 0;
                 })
                 .map(etasuElement => (
-                  <Box key={etasuElement._id}>
-                    <Typography component="div">{etasuElement.requirementName}</Typography>
-                    <Typography component="div">{etasuElement.completed ? '✅' : '❌'}</Typography>
+                  <Box key={etasuElement.name}>
+                    <Typography component="div">{etasuElement.name}</Typography>
+                    <Typography component="div">{etasuElement.resource.status === 'success' ? '✅' : '❌'}</Typography>
                   </Box>
                 ))}
             </Box>

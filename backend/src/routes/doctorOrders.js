@@ -75,24 +75,57 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     const dontUpdateStatusBool = req.query.dontUpdateStatus;
     // Finding by id
     const order = await doctorOrder.findById(req.params.id).exec();
-    console.log('Found doctor order by id!');
+    console.log('Found doctor order by id! --- ', order);
+
+    const body = {
+      resourceType: 'Parameters',
+      parameter: [
+        {
+          name: 'patient',
+          resource: {
+            resourceType: 'Patient',
+            id: order.prescriberOrderNumber,
+            name: [{
+              family: order.patientLastName, given: order.patientName.split(' '), use: 'official'
+            }],
+            birthDate: order.patientDOB,
+          },
+        },
+        {
+          name: 'medication',
+          resource: {
+            resourceType: 'Medication',
+            id: order.prescriberOrderNumber,
+            code: {
+              coding: [{system: 'http://www.nlm.nih.gov/research/umls/rxnorm', code: order.drugRxnormCode, display: order.drugNames}]
+            }
+          }
+        }
+      ]
+    };
 
     // Reaching out to REMS Admin finding by pt name and drug name
     // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
 
     const remsBase = env.REMS_ADMIN_BASE;
-    const url =
-      remsBase +
-      '/etasu/met/patient/' +
-      order.patientFirstName +
-      '/' +
-      order.patientLastName +
-      '/' +
-      order.patientDOB +
-      '/drug/' +
-      order.simpleDrugName;
-    const response = await axios.get(url);
+
+    const newUrl = remsBase + '/4_0_0/GuidanceResponse/$rems-etasu';
+
+    const response = await axios.post(newUrl, body, {
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
     console.log('Retrieved order');
+    const responseResource = response.data.parameter[0].resource;
+    const params = [];
+    if (responseResource.contained && responseResource.contained[0]) {
+      for (const param of responseResource.contained[0]['parameter']) {
+        params.push(param);
+      }
+    }
+
+    const status = responseResource.status === 'success' ? 'Approved' : 'Pending';
 
     // Saving and updating
     const newOrder = await doctorOrder.findOneAndUpdate(
@@ -101,8 +134,8 @@ router.patch('/api/updateRx/:id', async (req, res) => {
         dispenseStatus:
           dontUpdateStatusBool || order.dispenseStatus === 'Picked Up'
             ? order.dispenseStatus
-            : response.data.status,
-        metRequirements: response.data.metRequirements
+            : status,
+        metRequirements: params
       },
       {
         new: true
@@ -233,6 +266,7 @@ function parseNCPDPScript(newRx) {
     drugNames: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription,
     simpleDrugName: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription.split(' ')[0],
     drugNdcCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode.Code,
+    drugRxnormCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.DrugDBCode.Code,
     rxDate: newRx.Message.Body.NewRx.MedicationPrescribed.WrittenDate.Date,
     drugPrice: 200, // Add later?
     quantities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
