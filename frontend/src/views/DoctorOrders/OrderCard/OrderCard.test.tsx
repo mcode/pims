@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import OrderCard from './OrderCard';
 import axios from 'axios';
@@ -52,14 +51,6 @@ describe('<OrderCard />', () => {
       expect(screen.getByText(/1996/i)).toBeInTheDocument();
       expect(screen.getByText(/Turalio/i)).toBeInTheDocument();
       expect(screen.getByText(/Pending/i)).toBeInTheDocument();
-      // expect(screen.getByTestId('quantities')).toBeInTheDocument();
-      // expect(screen.getByTestId('drugPrice')).toBeInTheDocument();
-      // expect(screen.getByTestId('total')).toBeInTheDocument();
-      // expect(screen.getByTestId('doctorName')).toBeInTheDocument();
-      // expect(screen.getByTestId('doctorID')).toBeInTheDocument();
-      // expect(screen.getByTestId('doctorContact')).toBeInTheDocument();
-      // expect(screen.getByTestId('doctorEmail')).toBeInTheDocument();
-      // expect(screen.getByTestId('pickupDate')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /remove all/i })).toBeInTheDocument();
     });
   });

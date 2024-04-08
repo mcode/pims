@@ -24,7 +24,7 @@ type MetRequirements = {
   };
 };
 
-interface DoctorOrder {
+export type DoctorOrder = {
   caseNumber?: string;
   patientName?: string;
   patientDOB?: string;
@@ -34,13 +34,13 @@ interface DoctorOrder {
   doctorEmail?: string;
   drugNames?: string;
   drugPrice?: number;
-  drugRxnormCode: number;
-  quanitities?: string;
+  drugRxNormCode: number;
+  quantities?: string;
   total?: number;
   pickupDate?: string;
   dispenseStatus?: string;
   metRequirements: MetRequirements[];
-}
+};
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -59,12 +59,12 @@ const EtasuPopUp = (props: any) => {
   const handleClickOpen = () => {
     setOpen(true);
     // call api endpoint to update
-    const url = '/doctorOrders/api/updateRx/' + props.data._id + '?dontUpdateStatus=true';
+    const url = '/doctorOrders/api/updateRx/' + props.data._id + '?doNotUpdateStatus=true';
     axios
       .patch(url)
       .then(function (response) {
         const DoctorOrders = response.data;
-        //Adding data to state
+        // Adding data to state
         getDoctorOrders(DoctorOrders);
       })
       .catch(error => console.error('Error', error));
