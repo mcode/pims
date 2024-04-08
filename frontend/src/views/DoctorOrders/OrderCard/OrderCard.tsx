@@ -16,11 +16,10 @@ import {
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import EtasuPopUp from './EtasuPopUp/EtasuPopUp';
-import './OrderCard.css';
 import PickedUpButton from './PickedUpButton';
 import VerifyButton from './VerifyButton';
 
-interface DoctorOrder {
+export type DoctorOrder = {
   caseNumber?: string;
   patientName?: string;
   patientDOB?: string;
@@ -35,15 +34,21 @@ interface DoctorOrder {
   pickupDate?: string;
   dispenseStatus?: string;
   metRequirements: {
-    stakeholderId: string;
-    completed: boolean;
-    metRequirementId: string;
-    requirementName: string;
-    requirementDescription: string;
+    name: string;
+    resource: {
+      status: string;
+      moduleUri: string;
+      resourceType: string;
+      note: [{ text: string }];
+      subject: {
+        reference: string;
+      };
+    };
   }[];
-}
+  _id: string;
+};
 
-const OrderCard = (props: any) => {
+const OrderCard = (props: { tabStatus: 'Pending' | 'Picked Up' | 'Approved' }) => {
   const [doctorOrder, setDoctorOrders] = useState<DoctorOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -107,7 +112,7 @@ const OrderCard = (props: any) => {
                       <TableHead sx={{ fontWeight: 'bold' }}>
                         <TableRow sx={{ fontWeight: 'bold' }}>
                           <TableCell align="left">Dispense Status</TableCell>
-                          <TableCell align="right">Quanitities</TableCell>
+                          <TableCell align="right">Quantities</TableCell>
                           <TableCell align="right">Drug Price</TableCell>
                           <TableCell align="right">Total</TableCell>
                           <TableCell align="right">Doctor Name</TableCell>
@@ -137,10 +142,10 @@ const OrderCard = (props: any) => {
                   <Box sx={{ marginLeft: 'auto', mr: '8px' }}>
                     <EtasuPopUp data={row} />
                     {props.tabStatus === 'Pending' && (
-                      <VerifyButton data={{ row, getAllDoctorOrders }} />
+                      <VerifyButton row={row} getAllDoctorOrders={getAllDoctorOrders} />
                     )}
                     {props.tabStatus === 'Approved' && (
-                      <PickedUpButton data={{ row, getAllDoctorOrders }} />
+                      <PickedUpButton row={row} getAllDoctorOrders={getAllDoctorOrders} />
                     )}
                   </Box>
                 </CardActions>

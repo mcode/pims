@@ -1,7 +1,6 @@
 import { Box, Tab, Tabs } from '@mui/material';
 import { Container } from '@mui/system';
 import React from 'react';
-import './DoctorOrders.css';
 import NewOrders from './NewOrders/NewOrders';
 import PickedUpOrders from './PickedUpOrders/PickedUpOrders';
 import VerifiedOrders from './VerifiedOrders/VerifiedOrders';
@@ -44,17 +43,17 @@ export default function DoctorOrders() {
           <Box sx={{ padding: 2 }}>
             {tabIndex === 0 && (
               <Box>
-                <NewOrders></NewOrders>
+                <NewOrders />
               </Box>
             )}
             {tabIndex === 1 && (
               <Box>
-                <VerifiedOrders></VerifiedOrders>
+                <VerifiedOrders />
               </Box>
             )}
             {tabIndex === 2 && (
               <Box>
-                <PickedUpOrders></PickedUpOrders>
+                <PickedUpOrders />
               </Box>
             )}
           </Box>

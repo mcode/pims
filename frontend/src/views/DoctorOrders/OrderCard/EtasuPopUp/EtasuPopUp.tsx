@@ -12,15 +12,19 @@ import * as React from 'react';
 import { useState } from 'react';
 
 type MetRequirements = {
-  stakeholderId: string;
-  completed: boolean;
-  metRequirementId: string;
-  requirementName: string;
-  requirementDescription: string;
-  _id: string;
+  name: string;
+  resource: {
+    status: string;
+    moduleUri: string;
+    resourceType: string;
+    note: [{ text: string }];
+    subject: {
+      reference: string;
+    };
+  };
 };
 
-interface DoctorOrder {
+export type DoctorOrder = {
   caseNumber?: string;
   patientName?: string;
   patientDOB?: string;
@@ -30,12 +34,13 @@ interface DoctorOrder {
   doctorEmail?: string;
   drugNames?: string;
   drugPrice?: number;
-  quanitities?: string;
+  drugRxNormCode: number;
+  quantities?: string;
   total?: number;
   pickupDate?: string;
   dispenseStatus?: string;
   metRequirements: MetRequirements[];
-}
+};
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -54,12 +59,12 @@ const EtasuPopUp = (props: any) => {
   const handleClickOpen = () => {
     setOpen(true);
     // call api endpoint to update
-    const url = '/doctorOrders/api/updateRx/' + props.data._id + '?dontUpdateStatus=true';
+    const url = '/doctorOrders/api/updateRx/' + props.data._id + '?doNotUpdateStatus=true';
     axios
       .patch(url)
       .then(function (response) {
         const DoctorOrders = response.data;
-        //Adding data to state
+        // Adding data to state
         getDoctorOrders(DoctorOrders);
       })
       .catch(error => console.error('Error', error));
@@ -88,16 +93,18 @@ const EtasuPopUp = (props: any) => {
               {doctorOrder?.metRequirements
                 .sort((first: MetRequirements, second: MetRequirements) => {
                   // Keep the other forms unsorted.
-                  if (second.requirementName.includes('Patient Status Update')) {
+                  if (second.name.includes('Patient Status Update')) {
                     // Sort the Patient Status Update forms in descending order of timestamp.
-                    return second.requirementName.localeCompare(first.requirementName);
+                    return second.name.localeCompare(first.name);
                   }
                   return 0;
                 })
                 .map(etasuElement => (
-                  <Box key={etasuElement._id}>
-                    <Typography component="div">{etasuElement.requirementName}</Typography>
-                    <Typography component="div">{etasuElement.completed ? '✅' : '❌'}</Typography>
+                  <Box key={etasuElement.name}>
+                    <Typography component="div">{etasuElement.name}</Typography>
+                    <Typography component="div">
+                      {etasuElement.resource.status === 'success' ? '✅' : '❌'}
+                    </Typography>
                   </Box>
                 ))}
             </Box>
