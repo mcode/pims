@@ -115,11 +115,9 @@ router.patch('/api/updateRx/:id', async (req, res) => {
     };
 
     // Reaching out to REMS Admin finding by pt name and drug name
-    // '/etasu/met/patient/:patientFirstName/:patientLastName/:patientDOB/drug/:drugName',
+    const remsBase = env.REMS_ADMIN_FHIR_URL;
 
-    const remsBase = env.REMS_ADMIN_BASE;
-
-    const newUrl = remsBase + '/4_0_0/GuidanceResponse/$rems-etasu';
+    const newUrl = remsBase + '/GuidanceResponse/$rems-etasu';
 
     const response = await axios.post(newUrl, body, {
       headers: {
