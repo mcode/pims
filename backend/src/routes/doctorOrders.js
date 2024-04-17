@@ -225,13 +225,18 @@ router.delete('/api/deleteAll', async (req, res) => {
   res.send([]);
 });
 
-const getGuidanceResponse = async order => {
+const getRemsAdminFhirUrl = order => {
   const rxnorm = order.drugRxnormCode;
   const remsDrug = medicationRequestToRemsAdmins.find(entry => {
     return Number(rxnorm) === Number(entry.rxnorm);
   });
+  return remsDrug?.remsAdminFhirUrl;
+};
 
-  if (!remsDrug) {
+const getGuidanceResponse = async order => {
+  const remsAdminFhirUrl = getRemsAdminFhirUrl(order);
+
+  if (!remsAdminFhirUrl) {
     return null;
   }
 
@@ -273,9 +278,7 @@ const getGuidanceResponse = async order => {
   };
 
   // Reaching out to REMS Admin finding by pt name and drug name
-  const remsBase = remsDrug.remsAdminFhirUrl;
-
-  const newUrl = remsBase + '/GuidanceResponse/$rems-etasu';
+  const newUrl = remsAdminFhirUrl + '/GuidanceResponse/$rems-etasu';
 
   const response = await axios.post(newUrl, body, {
     headers: {
@@ -337,19 +340,13 @@ async function parseNCPDPScript(newRx) {
     drugPrice: 200, // Add later?
     quantities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
     total: 1800,
-    pickupDate: 'Tue Dec 13 2022' // Add later?
+    pickupDate: 'Tue Dec 13 2022', // Add later?
+    dispenseStatus: 'Pending'
   };
 
-  const guidanceResponse = await getGuidanceResponse(incompleteOrder);
-  const dispenseStatus = getDispenseStatus(incompleteOrder, guidanceResponse);
-  const isNotRemsDrug = !guidanceResponse;
-  const metRequirements = [];
-
-  const order = new doctorOrder({
-    ...incompleteOrder,
-    metRequirements: isNotRemsDrug ? null : metRequirements,
-    dispenseStatus
-  });
+  const isRemsDrug = !!getRemsAdminFhirUrl(incompleteOrder);
+  const metRequirements = isRemsDrug ? [] : null;
+  const order = new doctorOrder({ ...incompleteOrder, metRequirements });
   return order;
 }
 
