@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import OrderCard from './OrderCard';
+import OrderCard, { TabStatus } from './OrderCard';
 import axios from 'axios';
 
 const doctorOrders = [
@@ -35,7 +35,7 @@ jest.mock('axios');
 describe('<OrderCard />', () => {
   it('renders the order card with no doctor orders', async () => {
     axios.get = jest.fn().mockImplementationOnce(() => Promise.resolve({ data: [] }));
-    render(<OrderCard tabStatus={'Pending'} />);
+    render(<OrderCard tabStatus={TabStatus.PENDING} />);
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /no orders yet\./i })).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('<OrderCard />', () => {
 
   it('renders the order card and any doctor orders', async () => {
     axios.get = jest.fn().mockImplementationOnce(() => Promise.resolve({ data: doctorOrders }));
-    render(<OrderCard tabStatus={'Pending'} />);
+    render(<OrderCard tabStatus={TabStatus.PENDING} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Jon Snow/i)).toBeInTheDocument();

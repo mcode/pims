@@ -54,18 +54,15 @@ const Transition = React.forwardRef(function Transition(
 const EtasuPopUp = (props: any) => {
   const [open, setOpen] = React.useState(false);
 
-  const [doctorOrder, getDoctorOrders] = useState<DoctorOrder>();
+  const [doctorOrder, setDoctorOrder] = useState<DoctorOrder>();
 
   const handleClickOpen = () => {
     setOpen(true);
-    // call api endpoint to update
-    const url = '/doctorOrders/api/updateRx/' + props.data._id + '?doNotUpdateStatus=true';
+    const url = '/doctorOrders/api/updateRx/' + props.data._id + '/metRequirements';
     axios
       .patch(url)
       .then(function (response) {
-        const DoctorOrders = response.data;
-        // Adding data to state
-        getDoctorOrders(DoctorOrders);
+        setDoctorOrder(response.data);
       })
       .catch(error => console.error('Error', error));
   };
