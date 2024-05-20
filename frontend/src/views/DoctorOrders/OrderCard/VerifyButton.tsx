@@ -5,7 +5,6 @@ import { DoctorOrder } from './OrderCard';
 type VerifyButtonProps = { row: DoctorOrder; getAllDoctorOrders: () => Promise<void> };
 
 const VerifyButton = (props: VerifyButtonProps) => {
-  // verify the order
   const verifyOrder = () => {
     const url = '/doctorOrders/api/updateRx/' + props.row._id;
     axios

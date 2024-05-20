@@ -8,6 +8,7 @@ import bpx from 'body-parser-xml';
 import env from 'var';
 import { buildRxStatus, buildRxFill } from '../ncpdpScriptBuilder/buildScript.v2017071.js';
 import { NewRx } from '../database/schemas/newRx.js';
+import { medicationRequestToRemsAdmins } from '../database/data.js';
 
 bpx(bodyParser);
 router.use(
@@ -21,14 +22,32 @@ router.use(
 router.use(bodyParser.urlencoded({ extended: false }));
 
 /**
- * Route: 'doctorOrders/api/getRx'
- * Description : 'Returns all documents in database for PIMS'
+ * Route: 'doctorOrders/api/getRx/pending'
+ * Description: 'Returns all pending documents in database for PIMS'
  */
-router.get('/api/getRx', async (req, res) => {
-  //  finding all and adding it to the db
-  const order = await doctorOrder.find();
+router.get('/api/getRx/pending', async (_req, res) => {
+  const order = await doctorOrder.find({ dispenseStatus: 'Pending' });
+  console.log('Database returned with new orders');
+  res.json(order);
+});
 
-  console.log('Database returned with order');
+/**
+ * Route: 'doctorOrders/api/getRx/approved'
+ * Description: 'Returns all approved documents in database for PIMS'
+ */
+router.get('/api/getRx/approved', async (_req, res) => {
+  const order = await doctorOrder.find({ dispenseStatus: 'Approved' });
+  console.log('Database returned with approved orders');
+  res.json(order);
+});
+
+/**
+ * Route: 'doctorOrders/api/getRx/picked up'
+ * Description: 'Returns all picked up documents in database for PIMS'
+ */
+router.get('/api/getRx/pickedUp', async (_req, res) => {
+  const order = await doctorOrder.find({ dispenseStatus: 'Picked Up' });
+  console.log('Database returned with picked up orders');
   res.json(order);
 });
 
@@ -39,7 +58,7 @@ router.get('/api/getRx', async (req, res) => {
 router.post('/api/addRx', async (req, res) => {
   // Parsing incoming NCPDP SCRIPT XML to doctorOrder JSON
   const newRxMessageConvertedToJSON = req.body;
-  const newOrder = parseNCPDPScript(newRxMessageConvertedToJSON);
+  const newOrder = await parseNCPDPScript(newRxMessageConvertedToJSON);
 
   try {
     const newRx = new NewRx({
@@ -67,87 +86,54 @@ router.post('/api/addRx', async (req, res) => {
 });
 
 /**
- * Route: 'doctorOrders/api/updateRx/:_id'
+ * Route: 'doctorOrders/api/updateRx/:id'
  * Description : 'Updates prescription based on mongo id, used in etasu'
  */
 router.patch('/api/updateRx/:id', async (req, res) => {
   try {
-    const doNotUpdateStatusBool = req.query.doNotUpdateStatus;
     // Finding by id
     const order = await doctorOrder.findById(req.params.id).exec();
     console.log('Found doctor order by id! --- ', order);
 
-    const body = {
-      resourceType: 'Parameters',
-      parameter: [
-        {
-          name: 'patient',
-          resource: {
-            resourceType: 'Patient',
-            id: order.prescriberOrderNumber,
-            name: [
-              {
-                family: order.patientLastName,
-                given: order.patientName.split(' '),
-                use: 'official'
-              }
-            ],
-            birthDate: order.patientDOB
-          }
-        },
-        {
-          name: 'medication',
-          resource: {
-            resourceType: 'Medication',
-            id: order.prescriberOrderNumber,
-            code: {
-              coding: [
-                {
-                  system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
-                  code: order.drugRxnormCode,
-                  display: order.drugNames
-                }
-              ]
-            }
-          }
-        }
-      ]
-    };
-
-    // Reaching out to REMS Admin finding by pt name and drug name
-    const remsBase = env.REMS_ADMIN_FHIR_URL;
-
-    const newUrl = remsBase + '/GuidanceResponse/$rems-etasu';
-
-    const response = await axios.post(newUrl, body, {
-      headers: {
-        'content-type': 'application/json'
-      }
-    });
-    console.log('Retrieved order');
-    const responseResource = response.data.parameter[0].resource;
-    const params = [];
-    if (responseResource.contained && responseResource.contained[0]) {
-      for (const param of responseResource.contained[0]['parameter']) {
-        params.push(param);
-      }
-    }
-
-    const status = responseResource.status === 'success' ? 'Approved' : 'Pending';
+    const guidanceResponse = await getGuidanceResponse(order);
+    const metRequirements =
+      guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
+    const dispenseStatus = getDispenseStatus(order, guidanceResponse);
 
     // Saving and updating
     const newOrder = await doctorOrder.findOneAndUpdate(
       { _id: req.params.id },
-      {
-        dispenseStatus:
-          doNotUpdateStatusBool || order.dispenseStatus === 'Picked Up'
-            ? order.dispenseStatus
-            : status,
-        metRequirements: params
-      },
-      {
-        new: true
-      }
+      { dispenseStatus, metRequirements },
+      { new: true }
+    );
+
+    res.send(newOrder);
+    console.log('Updated order');
+  } catch (error) {
+    console.log('Error', error);
+    return error;
+  }
+});
+
+/**
+ * Route: 'doctorOrders/api/updateRx/:id/metRequirements'
+ * Description : 'Updates prescription metRequirements based on mongo id'
+ */
+router.patch('/api/updateRx/:id/metRequirements', async (req, res) => {
+  try {
+    // Finding by id
+    const order = await doctorOrder.findById(req.params.id).exec();
+    console.log('Found doctor order by id! --- ', order);
+
+    const guidanceResponse = await getGuidanceResponse(order);
+    const metRequirements =
+      guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
+
+    // Saving and updating
+    const newOrder = await doctorOrder.findOneAndUpdate(
+      { _id: req.params.id },
+      { metRequirements },
+      { new: true }
     );
 
     res.send(newOrder);
@@ -239,14 +225,89 @@ router.delete('/api/deleteAll', async (req, res) => {
   res.send([]);
 });
 
+const getRemsAdminFhirUrl = order => {
+  const rxnorm = order.drugRxnormCode;
+  const remsDrug = medicationRequestToRemsAdmins.find(entry => {
+    return Number(rxnorm) === Number(entry.rxnorm);
+  });
+  return remsDrug?.remsAdminFhirUrl;
+};
+
+const getGuidanceResponse = async order => {
+  const remsAdminFhirUrl = getRemsAdminFhirUrl(order);
+
+  if (!remsAdminFhirUrl) {
+    return null;
+  }
+
+  const body = {
+    resourceType: 'Parameters',
+    parameter: [
+      {
+        name: 'patient',
+        resource: {
+          resourceType: 'Patient',
+          id: order.prescriberOrderNumber,
+          name: [
+            {
+              family: order.patientLastName,
+              given: order.patientName.split(' '),
+              use: 'official'
+            }
+          ],
+          birthDate: order.patientDOB
+        }
+      },
+      {
+        name: 'medication',
+        resource: {
+          resourceType: 'Medication',
+          id: order.prescriberOrderNumber,
+          code: {
+            coding: [
+              {
+                system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+                code: order.drugRxnormCode,
+                display: order.drugNames
+              }
+            ]
+          }
+        }
+      }
+    ]
+  };
+
+  // Reaching out to REMS Admin finding by pt name and drug name
+  const newUrl = remsAdminFhirUrl + '/GuidanceResponse/$rems-etasu';
+
+  const response = await axios.post(newUrl, body, {
+    headers: {
+      'content-type': 'application/json'
+    }
+  });
+  console.log('Retrieved order');
+  const responseResource = response.data.parameter[0].resource;
+  return responseResource;
+};
+
+const getDispenseStatus = (order, guidanceResponse) => {
+  const isNotRemsDrug = !guidanceResponse;
+  const isRemsDrugAndMetEtasu = guidanceResponse?.status === 'success';
+  const isPickedUp = order.dispenseStatus === 'Picked Up';
+  if (isNotRemsDrug && order.dispenseStatus === 'Pending') return 'Approved';
+  if (isRemsDrugAndMetEtasu) return 'Approved';
+  if (isPickedUp) return 'Picked Up';
+  return 'Pending';
+};
+
 /**
  * Description : 'Returns parsed NCPDP NewRx as JSON'
  * In : NCPDP SCRIPT XML <NewRx>
  * Return : Mongoose schema of a newOrder
  */
-function parseNCPDPScript(newRx) {
+async function parseNCPDPScript(newRx) {
   // Parsing  XML NCPDP SCRIPT from EHR
-  var newOrder = new doctorOrder({
+  const incompleteOrder = {
     caseNumber: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
     prescriberOrderNumber: newRx.Message.Header.PrescriberOrderNumber,
     patientName:
@@ -280,11 +341,13 @@ function parseNCPDPScript(newRx) {
     quantities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
     total: 1800,
     pickupDate: 'Tue Dec 13 2022', // Add later?
-    dispenseStatus: 'Pending',
-    metRequirements: [] // will fill later
-  });
+    dispenseStatus: 'Pending'
+  };
 
-  return newOrder;
+  const isRemsDrug = !!getRemsAdminFhirUrl(incompleteOrder);
+  const metRequirements = isRemsDrug ? [] : null;
+  const order = new doctorOrder({ ...incompleteOrder, metRequirements });
+  return order;
 }
 
 export default router;
