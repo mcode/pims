@@ -11,18 +11,29 @@ import axios from 'axios';
 import * as React from 'react';
 import { useState } from 'react';
 
-type MetRequirements = {
+type Requirement = {
   name: string;
   resource: {
     status: string;
     moduleUri: string;
     resourceType: string;
-    note: [{ text: string }];
+    note: [
+      {
+        text: string;
+      }
+    ];
     subject: {
       reference: string;
     };
   };
 };
+
+type AuthNumber = {
+  name: 'auth_number';
+  valueString: string;
+};
+
+type MetRequirements = Requirement | AuthNumber;
 
 export type DoctorOrder = {
   caseNumber?: string;
@@ -56,6 +67,17 @@ const EtasuPopUp = (props: any) => {
 
   const [doctorOrder, setDoctorOrder] = useState<DoctorOrder>();
 
+  const etasuElements = (
+    (doctorOrder?.metRequirements || []).filter(m => m.name !== 'auth_number') as Requirement[]
+  ).sort((first: Requirement, second: Requirement) => {
+    // Keep the other forms unsorted.
+    if (second.name.includes('Patient Status Update')) {
+      // Sort the Patient Status Update forms in descending order of timestamp.
+      return second.name.localeCompare(first.name);
+    }
+    return 0;
+  });
+
   const handleClickOpen = () => {
     setOpen(true);
     const url = '/doctorOrders/api/updateRx/' + props.data._id + '/metRequirements';
@@ -87,23 +109,14 @@ const EtasuPopUp = (props: any) => {
         <DialogContent>
           <DialogContentText component="div" id="alert-dialog-slide-description">
             <Box>
-              {doctorOrder?.metRequirements
-                .sort((first: MetRequirements, second: MetRequirements) => {
-                  // Keep the other forms unsorted.
-                  if (second.name.includes('Patient Status Update')) {
-                    // Sort the Patient Status Update forms in descending order of timestamp.
-                    return second.name.localeCompare(first.name);
-                  }
-                  return 0;
-                })
-                .map(etasuElement => (
-                  <Box key={etasuElement.name}>
-                    <Typography component="div">{etasuElement.name}</Typography>
-                    <Typography component="div">
-                      {etasuElement.resource.status === 'success' ? '✅' : '❌'}
-                    </Typography>
-                  </Box>
-                ))}
+              {etasuElements.map(({ name, resource }) => (
+                <Box key={name}>
+                  <Typography component="div">{name}</Typography>
+                  <Typography component="div">
+                    {resource.status === 'success' ? '✅' : '❌'}
+                  </Typography>
+                </Box>
+              ))}
             </Box>
           </DialogContentText>
         </DialogContent>
