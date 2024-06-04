@@ -242,7 +242,7 @@ const getGuidanceResponse = async order => {
 
   // Make the etasu call with the auth number if it exists, if not call with patient and medication
   let body = {};
-  if (order.authNumber !== "") {
+  if (order.authNumber !== '') {
     body = {
       resourceType: 'Parameters',
       parameter: [
@@ -251,7 +251,7 @@ const getGuidanceResponse = async order => {
             valueString: order.authNumber
           }
       ]
-    }
+    };
   } else {
     body = {
       resourceType: 'Parameters',
