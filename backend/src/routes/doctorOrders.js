@@ -246,10 +246,10 @@ const getGuidanceResponse = async order => {
     body = {
       resourceType: 'Parameters',
       parameter: [
-          {
-            name: 'authNumber',
-            valueString: order.authNumber
-          }
+        {
+          name: 'authNumber',
+          valueString: order.authNumber
+        }
       ]
     };
   } else {
