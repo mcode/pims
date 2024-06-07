@@ -240,42 +240,56 @@ const getGuidanceResponse = async order => {
     return null;
   }
 
-  const body = {
-    resourceType: 'Parameters',
-    parameter: [
-      {
-        name: 'patient',
-        resource: {
-          resourceType: 'Patient',
-          id: order.prescriberOrderNumber,
-          name: [
-            {
-              family: order.patientLastName,
-              given: order.patientName.split(' '),
-              use: 'official'
-            }
-          ],
-          birthDate: order.patientDOB
+  // Make the etasu call with the auth number if it exists, if not call with patient and medication
+  let body = {};
+  if (order.authNumber !== '') {
+    body = {
+      resourceType: 'Parameters',
+      parameter: [
+        {
+          name: 'authNumber',
+          valueString: order.authNumber
         }
-      },
-      {
-        name: 'medication',
-        resource: {
-          resourceType: 'Medication',
-          id: order.prescriberOrderNumber,
-          code: {
-            coding: [
+      ]
+    };
+  } else {
+    body = {
+      resourceType: 'Parameters',
+      parameter: [
+        {
+          name: 'patient',
+          resource: {
+            resourceType: 'Patient',
+            id: order.prescriberOrderNumber,
+            name: [
               {
-                system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
-                code: order.drugRxnormCode,
-                display: order.drugNames
+                family: order.patientLastName,
+                given: order.patientName.split(' '),
+                use: 'official'
               }
-            ]
+            ],
+            birthDate: order.patientDOB
+          }
+        },
+        {
+          name: 'medication',
+          resource: {
+            resourceType: 'Medication',
+            id: order.prescriberOrderNumber,
+            code: {
+              coding: [
+                {
+                  system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+                  code: order.drugRxnormCode,
+                  display: order.drugNames
+                }
+              ]
+            }
           }
         }
-      }
-    ]
-  };
+      ]
+    };
+  }
 
   // Reaching out to REMS Admin finding by pt name and drug name
   const newUrl = remsAdminFhirUrl + '/GuidanceResponse/$rems-etasu';
@@ -309,6 +323,7 @@ async function parseNCPDPScript(newRx) {
   // Parsing  XML NCPDP SCRIPT from EHR
   const incompleteOrder = {
     caseNumber: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
+    authNumber: newRx.Message.Header.AuthorizationNumber,
     prescriberOrderNumber: newRx.Message.Header.PrescriberOrderNumber,
     patientName:
       newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName +
