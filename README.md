@@ -1,8 +1,27 @@
 # Pharmacy Information Management System
 
+## Overview of repository
+
+The Pharmacy Information Management System (PIMS) is a mock pharmacy system written in TypeScript/JavaScript/MongoDB that handles FHIR R4 (4.0.1), NCPDP Script, and proprietary data exchanges between the [request-generator](https://github.com/mcode/request-generator/), [test-ehr](https://github.com/mcode/test-ehr/), and [rems-admin](https://github.com/mcode/rems-admin/). This repository consists of a frontend service and a backend service.
+
+### Backend overview
+
+The backend consists of multiple HTTP GET, POST, PATCH, or DELETE routes, most of which are used to internally update the backend's database of proprietary doctor orders and NewRx's (based off NCPDP Script 2017071 NewRx), display doctor orders on the frontend, or handle converting FHIR and NCPDP Script.
+
+- `/api/getRx/pending`, `/api/getRx/approved`, and `/api/getRx/pickedUp` are called by the PIMS frontend via GET. Each endpoint returns doctor orders with a "pending", "approved", or "picked up" dispense status.
+- `/api/addRx` is called by the request-generator via POST. The endpoint parses an incoming NCPDP Script 2017071 XML NewRx, stores it, and returns an NCPDP Script 2017071 Status in XML.
+- `/api/updateRx/:id` is called by the PIMS frontend via PATCH. The endpoint triggers a the rems-admin's FHIR R4 GuidanceResponse POST Operation with a FHIR R4 Parameters to update a doctor order's dispense status.
+- `/api/updateRx/:id/metRequirements` is called by the PIMS frontend to display a list of fulfilled and unfulfilled Elements to Assure Safe Use (ETASU).
+- `/api/updateRx/:id/pickedUp` is called by the PIMS frontend to update a doctor order's dispense status to "picked up" and POST an NCPDP Script 2017071 RxFill created from the stored NCPDP Script 2017071 NewRx to the test-ehr to update the associated FHIR R4 MedicationDispense.
+- `/api/deleteAll` is called by the PIMS frontend and request-generator via DELETE to delete all doctor orders (for development purposes).
+
+### Frontend overview
+
+The frontend displays pending, approved, and picked up proprietary doctor orders at [http://localhost:5050/DoctorOrders](http://localhost:5050/DoctorOrders). While there is a login page at [http://localhost:5050](http://localhost:5050/DoctorOrders) for a dummy user, there is no user authentication or authorization system.
+
 ## Setup
 
-The application is divided into a frontend and backend service. For an initial setup run `npm install` in both the frontend and backend subdirectories. This will install the dependencies required for each of the services.
+For an initial setup run `npm install` in both the frontend and backend subdirectories. This will install the dependencies required for each of the services.
 
 ## Running backend and frontend
 
