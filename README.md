@@ -10,7 +10,7 @@ The backend consists of multiple HTTP GET, POST, PATCH, or DELETE routes, most o
 
 - `/api/getRx/pending`, `/api/getRx/approved`, and `/api/getRx/pickedUp` are called by the PIMS frontend via GET. Each endpoint returns doctor orders with a "pending", "approved", or "picked up" dispense status.
 - `/api/addRx` is called by the request-generator via POST. The endpoint parses an incoming NCPDP Script 2017071 XML NewRx, stores it, and returns an NCPDP Script 2017071 Status in XML.
-- `/api/updateRx/:id` is called by the PIMS frontend via PATCH. The endpoint triggers a the rems-admin's FHIR R4 GuidanceResponse POST Operation with a FHIR R4 Parameters to update a doctor order's dispense status.
+- `/api/updateRx/:id` is called by the PIMS frontend via PATCH. The endpoint triggers the rems-admin's FHIR R4 GuidanceResponse POST Operation with a FHIR R4 Parameters to update a doctor order's dispense status to "approved".
 - `/api/updateRx/:id/metRequirements` is called by the PIMS frontend to display a list of fulfilled and unfulfilled Elements to Assure Safe Use (ETASU).
 - `/api/updateRx/:id/pickedUp` is called by the PIMS frontend to update a doctor order's dispense status to "picked up" and POST an NCPDP Script 2017071 RxFill created from the stored NCPDP Script 2017071 NewRx to the test-ehr to update the associated FHIR R4 MedicationDispense.
 - `/api/deleteAll` is called by the PIMS frontend and request-generator via DELETE to delete all doctor orders (for development purposes).
