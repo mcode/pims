@@ -17,7 +17,7 @@ The backend consists of multiple HTTP GET, POST, PATCH, or DELETE routes, most o
 
 ### Frontend overview
 
-The frontend displays pending, approved, and picked up proprietary doctor orders at [http://localhost:5050/DoctorOrders](http://localhost:5050/DoctorOrders). While there is a login page at [http://localhost:5050](http://localhost:5050/DoctorOrders) for a dummy user, there is no user authentication or authorization system.
+The frontend displays pending, approved, and picked up proprietary doctor orders at [http://localhost:5050/DoctorOrders](http://localhost:5050/DoctorOrders). While there is a login page at [http://localhost:5050](http://localhost:5050) for a dummy user, there is no user authentication or authorization system.
 
 ## Setup
 
