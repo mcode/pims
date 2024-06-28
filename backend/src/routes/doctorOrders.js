@@ -42,7 +42,7 @@ router.get('/api/getRx/approved', async (_req, res) => {
 });
 
 /**
- * Route: 'doctorOrders/api/getRx/picked up'
+ * Route: 'doctorOrders/api/getRx/pickedUp'
  * Description: 'Returns all picked up documents in database for PIMS'
  */
 router.get('/api/getRx/pickedUp', async (_req, res) => {
