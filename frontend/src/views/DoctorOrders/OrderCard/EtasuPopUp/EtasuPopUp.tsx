@@ -37,6 +37,7 @@ type MetRequirements = Requirement | AuthNumber;
 
 export type DoctorOrder = {
   caseNumber?: string;
+  authNumber?: string;
   patientName?: string;
   patientDOB?: string;
   doctorName?: string;
