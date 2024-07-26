@@ -225,18 +225,20 @@ router.delete('/api/deleteAll', async (req, res) => {
   res.send([]);
 });
 
-const getRemsAdminFhirUrl = order => {
+const getRemsAdminEtasuUrl = order => {
   const rxnorm = order.drugRxnormCode;
   const remsDrug = medicationRequestToRemsAdmins.find(entry => {
     return Number(rxnorm) === Number(entry.rxnorm);
   });
-  return remsDrug?.remsAdminFhirUrl;
+  const baseUrl = remsDrug?.remsAdminFhirUrl;
+  const remsAdminFhirUrl = baseUrl + '/GuidanceResponse/$rems-etasu';
+  return baseUrl ? remsAdminFhirUrl : null;
 };
 
 const getGuidanceResponse = async order => {
-  const remsAdminFhirUrl = getRemsAdminFhirUrl(order);
+  const etasuUrl = env.USE_INTERMEDIARY ? env.INTERMEDIARY_ETASU_MET : getRemsAdminEtasuUrl(order);
 
-  if (!remsAdminFhirUrl) {
+  if (!etasuUrl) {
     return null;
   }
 
@@ -291,15 +293,12 @@ const getGuidanceResponse = async order => {
     };
   }
 
-  // Reaching out to REMS Admin finding by pt name and drug name
-  const newUrl = remsAdminFhirUrl + '/GuidanceResponse/$rems-etasu';
-
-  const response = await axios.post(newUrl, body, {
+  const response = await axios.post(etasuUrl, body, {
     headers: {
       'content-type': 'application/json'
     }
   });
-  console.log('Retrieved order');
+  console.log('Retrieved order', etasuUrl);
   const responseResource = response.data.parameter[0].resource;
   return responseResource;
 };
@@ -359,7 +358,7 @@ async function parseNCPDPScript(newRx) {
     dispenseStatus: 'Pending'
   };
 
-  const isRemsDrug = !!getRemsAdminFhirUrl(incompleteOrder);
+  const isRemsDrug = !!getRemsAdminEtasuUrl(incompleteOrder);
   const metRequirements = isRemsDrug ? [] : null;
   const order = new doctorOrder({ ...incompleteOrder, metRequirements });
   return order;
