@@ -225,18 +225,25 @@ router.delete('/api/deleteAll', async (req, res) => {
   res.send([]);
 });
 
-const getRemsAdminEtasuUrl = order => {
-  const rxnorm = order.drugRxnormCode;
-  const remsDrug = medicationRequestToRemsAdmins.find(entry => {
-    return Number(rxnorm) === Number(entry.rxnorm);
-  });
-  const baseUrl = remsDrug?.remsAdminFhirUrl;
-  const remsAdminFhirUrl = baseUrl + '/GuidanceResponse/$rems-etasu';
-  return baseUrl ? remsAdminFhirUrl : null;
+const getEtasuUrl = order => {
+  let baseUrl;
+
+  if (env.USE_INTERMEDIARY) {
+    baseUrl = env.INTERMEDIARY_ETASU_MET;
+  } else {
+    const rxnorm = order.drugRxnormCode;
+    const remsDrug = medicationRequestToRemsAdmins.find(entry => {
+      return Number(rxnorm) === Number(entry.rxnorm);
+    });
+    baseUrl = remsDrug?.remsAdminFhirUrl;
+  }
+
+  const etasuUrl = baseUrl + '/GuidanceResponse/$rems-etasu';
+  return baseUrl ? etasuUrl : null;
 };
 
 const getGuidanceResponse = async order => {
-  const etasuUrl = env.USE_INTERMEDIARY ? env.INTERMEDIARY_ETASU_MET : getRemsAdminEtasuUrl(order);
+  const etasuUrl = getEtasuUrl(order);
 
   if (!etasuUrl) {
     return null;
@@ -358,7 +365,7 @@ async function parseNCPDPScript(newRx) {
     dispenseStatus: 'Pending'
   };
 
-  const isRemsDrug = !!getRemsAdminEtasuUrl(incompleteOrder);
+  const isRemsDrug = !!getEtasuUrl(incompleteOrder);
   const metRequirements = isRemsDrug ? [] : null;
   const order = new doctorOrder({ ...incompleteOrder, metRequirements });
   return order;
