@@ -229,7 +229,7 @@ const getEtasuUrl = order => {
   let baseUrl;
 
   if (env.USE_INTERMEDIARY) {
-    baseUrl = env.INTERMEDIARY_ETASU_MET;
+    baseUrl = env.INTERMEDIARY_FHIR_URL;
   } else {
     const rxnorm = order.drugRxnormCode;
     const remsDrug = medicationRequestToRemsAdmins.find(entry => {
