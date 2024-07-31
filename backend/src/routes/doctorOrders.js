@@ -225,6 +225,12 @@ router.delete('/api/deleteAll', async (req, res) => {
   res.send([]);
 });
 
+const isRemsDrug = order => {
+  return medicationRequestToRemsAdmins.some(
+    entry => Number(order.drugRxnormCode) === Number(entry.rxnorm)
+  );
+};
+
 const getEtasuUrl = order => {
   let baseUrl;
 
@@ -365,8 +371,7 @@ async function parseNCPDPScript(newRx) {
     dispenseStatus: 'Pending'
   };
 
-  const isRemsDrug = !!getEtasuUrl(incompleteOrder);
-  const metRequirements = isRemsDrug ? [] : null;
+  const metRequirements = isRemsDrug(incompleteOrder) ? [] : null;
   const order = new doctorOrder({ ...incompleteOrder, metRequirements });
   return order;
 }
