@@ -311,8 +311,9 @@ const getGuidanceResponse = async order => {
       'content-type': 'application/json'
     }
   });
-  console.log('Retrieved order', etasuUrl);
-  const responseResource = response.data.parameter[0].resource;
+  console.log('Retrieved order', response);
+  console.log('URL', etasuUrl);
+  const responseResource = response.data.parameter?.[0]?.resource;
   return responseResource;
 };
 
