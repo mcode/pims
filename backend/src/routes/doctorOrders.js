@@ -144,37 +144,6 @@ const addRx = async (req, res) => {
   }
 };
 
-
-// /**
-//  * Route: 'doctorOrders/api/updateRx/:id'
-//  * Description : 'Updates prescription based on mongo id, used in etasu'
-//  */
-// router.patch('/api/updateRx/:id', async (req, res) => {
-//   try {
-//     // Finding by id
-//     const order = await doctorOrder.findById(req.params.id).exec();
-//     console.log('Found doctor order by id! --- ', order);
-
-//     const guidanceResponse = await getGuidanceResponse(order);
-//     const metRequirements =
-//       guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
-//     const dispenseStatus = getDispenseStatus(order, guidanceResponse);
-
-//     // Saving and updating
-//     const newOrder = await doctorOrder.findOneAndUpdate(
-//       { _id: req.params.id },
-//       { dispenseStatus, metRequirements },
-//       { new: true }
-//     );
-
-//     res.send(newOrder);
-//     console.log('Updated order');
-//   } catch (error) {
-//     console.log('Error', error);
-//     return error;
-//   }
-// });
-
 /**
  * Update prescription status based on mongo id, used in etasu 
  */
@@ -201,35 +170,6 @@ const updateRx = async (req, res) => {
   }
 };
 
-
-// /**
-//  * Route: 'doctorOrders/api/updateRx/:id/metRequirements'
-//  * Description : 'Updates prescription metRequirements based on mongo id'
-//  */
-// router.patch('/api/updateRx/:id/metRequirements', async (req, res) => {
-//   try {
-//     // Finding by id
-//     const order = await doctorOrder.findById(req.params.id).exec();
-//     console.log('Found doctor order by id! --- ', order);
-
-//     const guidanceResponse = await getGuidanceResponse(order);
-//     const metRequirements =
-//       guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
-
-//     // Saving and updating
-//     const newOrder = await doctorOrder.findOneAndUpdate(
-//       { _id: req.params.id },
-//       { metRequirements },
-//       { new: true }
-//     );
-
-//     res.send(newOrder);
-//     console.log('Updated order');
-//   } catch (error) {
-//     console.log('Error', error);
-//     return error;
-//   }
-// });
 
 /**
  * Update prescription metRequirements based on mongo id
@@ -295,37 +235,6 @@ const updateRxMetRequirements = async (req, res) => {
 //   }
 // });
 
-// /**
-//  * Route : 'doctorOrders/api/getRx/patient/:patientName/drug/:simpleDrugName`
-//  * Description : 'Fetches first available doctor order based on patientFirstName, patientLastName and patientDOB'
-//  *     'To retrieve a specific one for a drug on a given date, supply the drugNdcCode and rxDate in the query parameters'
-//  *     'Required Parameters : patientFirstName, patientLastName patientDOB are part of the path'
-//  *     'Optional Parameters : all remaining values in the orderSchema as query parameters (?drugNdcCode=0245-0571-01,rxDate=2020-07-11)'
-//  */
-// router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (req, res) => {
-//   var searchDict = {
-//     patientFirstName: req.params.patientFirstName,
-//     patientLastName: req.params.patientLastName,
-//     patientDOB: req.params.patientDOB
-//   };
-
-//   if (req.query && Object.keys(req.query).length > 0) {
-//     // add the query parameters
-//     for (const prop in req.query) {
-//       // verify that the parameter is in the orderSchema
-//       if (orderSchema.path(prop) != undefined) {
-//         // add the parameters to the search query
-//         searchDict[prop] = req.query[prop];
-//       }
-//     }
-//   }
-
-//   const prescription = await doctorOrder.findOne(searchDict).exec();
-//   console.log('Found doctor order');
-
-//   res.send(prescription);
-// });
-
 /**
  * Fetch prescription based on patient details such as patientFirstName, patientLastName and patientDOB
  */
@@ -351,23 +260,6 @@ const getPatientRx = async (req, res) => {
     return res.status(500).json({ error: 'Failed to find prescription' });
   }
 };
-
-// /**
-//  * Description : 'Deletes all documents and prescriptions in PIMS'
-//  */
-// router.delete('/api/deleteAll', async (req, res) => {
-//   await doctorOrder.deleteMany({});
-//   console.log('All doctor orders deleted in PIMS!');
-//   await NewRx.deleteMany({});
-//   console.log("All NewRx's deleted in PIMS!");
-//   res.send([]);
-// });
-
-// const isRemsDrug = order => {
-//   return medicationRequestToRemsAdmins.some(
-//     entry => Number(order.drugRxnormCode) === Number(entry.rxnorm)
-//   );
-// };
 
 /**
  * Delete all prescriptions in PIMS
