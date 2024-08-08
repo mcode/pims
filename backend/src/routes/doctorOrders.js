@@ -1,14 +1,14 @@
 import express from 'express';
-const router = express.Router();
 import { doctorOrder, orderSchema } from '../database/schemas/doctorOrderSchemas.js';
 import axios from 'axios';
-// XML Parsing Middleware used for NCPDP SCRIPT
-import bodyParser from 'body-parser';
+import bodyParser from 'body-parser'; // XML Parsing Middleware used for NCPDP SCRIPT
 import bpx from 'body-parser-xml';
 import env from 'var';
 import { buildRxStatus, buildRxFill } from '../ncpdpScriptBuilder/buildScript.v2017071.js';
 import { NewRx } from '../database/schemas/newRx.js';
 import { medicationRequestToRemsAdmins } from '../database/data.js';
+
+const router = express.Router();
 
 bpx(bodyParser);
 router.use(
@@ -21,214 +21,368 @@ router.use(
 );
 router.use(bodyParser.urlencoded({ extended: false }));
 
-/**
- * Route: 'doctorOrders/api/getRx/pending'
- * Description: 'Returns all pending documents in database for PIMS'
- */
-router.get('/api/getRx/pending', async (_req, res) => {
-  const order = await doctorOrder.find({ dispenseStatus: 'Pending' });
-  console.log('Database returned with new orders');
-  res.json(order);
-});
+/** 
+TODO:
+ - need to update the calls to api endpoint would look something like this:
+ 
+axios.post('/api/rx', {
+  action: 'updateStatus',
+  id: 'prescriptionId'
+  })
+
+  or 
+
+axios.post('/api/rx', { action: 'getRx' })
+*/
 
 /**
- * Route: 'doctorOrders/api/getRx/approved'
- * Description: 'Returns all approved documents in database for PIMS'
+ * Unified Route: 'doctorOrders/api/rx'
+ * Description: Handles all operations related to prescriptions
+ * Operations: 
+ *   - Fetch all prescriptions grouped by status
+ *   - Add a new prescription
+ *   - Update a prescription
  */
-router.get('/api/getRx/approved', async (_req, res) => {
-  const order = await doctorOrder.find({ dispenseStatus: 'Approved' });
-  console.log('Database returned with approved orders');
-  res.json(order);
-});
-
-/**
- * Route: 'doctorOrders/api/getRx/pickedUp'
- * Description: 'Returns all picked up documents in database for PIMS'
- */
-router.get('/api/getRx/pickedUp', async (_req, res) => {
-  const order = await doctorOrder.find({ dispenseStatus: 'Picked Up' });
-  console.log('Database returned with picked up orders');
-  res.json(order);
-});
-
-/**
- * Route: 'doctorOrders/api/addRx'
- * Description : 'Saves a new Doctor Order to db'
- */
-router.post('/api/addRx', async (req, res) => {
-  // Parsing incoming NCPDP SCRIPT XML to doctorOrder JSON
-  const newRxMessageConvertedToJSON = req.body;
-  const newOrder = await parseNCPDPScript(newRxMessageConvertedToJSON);
-
+router.post('/api/rx', async (req, res) => {
   try {
+    const { action, id, rxData } = req.body;
+
+    switch (action) {
+      case 'getRx':
+        return await getRx(req, res, stat);
+
+      case 'getPatientRx':
+        return await getPatientRx(req, res);
+
+      case 'addRx':
+        return await addRx(req, res);
+
+      case 'updateRx':
+        return await updateRx(req, res);
+
+      case 'updateRxMetRequirements':
+        return await updateRxMetRequirements(req, res);
+
+      case 'deleteAll':
+        return await deleteAll(req, res);
+
+      default:
+        return res.status(400).json({ error: 'Invalid action' });
+    }
+  } catch (error) {
+    console.error('Error processing request:', error);
+    res.status(500).json({ error: 'Failed to process request' });
+  }
+});
+
+/**
+ * fetch all prescriptions grouped by status or if not specified for all of them
+ */
+/**
+TODO: Update the call to endpoint 
+for all status: axios.post('/api/rx', { action: 'getStatus' })
+for an individual status: axios.post('/api/rx', { action: 'getStatus', status: 'Pending' })
+ */
+const getRx = async (_req, res, stat) => {
+  try {
+    const validStatuses = ['Pending', 'Approved', 'Picked Up'];
+
+    // Check if a specific status is requested and validate it
+    if (stat && !validStatuses.includes(stat)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+  
+  //getting a particular status 
+  let orders;
+  if (stat) {
+    orders = await doctorOrder.find({ dispenseStatus: stat });
+  }
+  //return all of them
+  else {
+    const pendingOrders = await doctorOrder.find({ dispenseStatus: 'Pending' });
+    const approvedOrders = await doctorOrder.find({ dispenseStatus: 'Approved' });
+    const pickedUpOrders = await doctorOrder.find({ dispenseStatus: 'Picked Up' });
+
+    orders = {
+      pending: pendingOrders,
+      approved: approvedOrders,
+      pickedUp: pickedUpOrders
+    };
+  }
+    
+    console.log('Database returned orders for status:', stat || 'all');
+    return res.json(orders);
+  } catch (error) {
+    console.error('Error retrieving orders:', error);
+    return res.status(500).json({ error: 'Failed to retrieve orders' });
+  }
+};
+
+/**
+ * Add a new prescription (saves Doctor Order to db)
+ */
+const addRx = async (req, res) => {
+  try {
+    const newRxMessageConvertedToJSON = req.body.rxData;
+    const newOrder = await parseNCPDPScript(newRxMessageConvertedToJSON);
+
     const newRx = new NewRx({
       prescriberOrderNumber: newRxMessageConvertedToJSON.Message.Header.PrescriberOrderNumber,
       serializedJSON: JSON.stringify(newRxMessageConvertedToJSON)
     });
+
     await newRx.save();
     console.log('Saved NewRx');
-  } catch (error) {
-    console.log('Could not store the NewRx', error);
-    return error;
-  }
-
-  try {
     await newOrder.save();
     console.log('DoctorOrder was saved');
-  } catch (error) {
-    console.log('ERROR! duplicate found, prescription already exists', error);
-    return error;
-  }
 
-  const RxStatus = buildRxStatus(newRxMessageConvertedToJSON);
-  res.send(RxStatus);
-  console.log('Sent RxStatus');
-});
+    const RxStatus = buildRxStatus(newRxMessageConvertedToJSON);
+    return res.send(RxStatus);
+  } catch (error) {
+    console.error('Error adding prescription:', error);
+    return res.status(500).json({ error: 'Failed to add prescription' });
+  }
+};
+
+
+// /**
+//  * Route: 'doctorOrders/api/updateRx/:id'
+//  * Description : 'Updates prescription based on mongo id, used in etasu'
+//  */
+// router.patch('/api/updateRx/:id', async (req, res) => {
+//   try {
+//     // Finding by id
+//     const order = await doctorOrder.findById(req.params.id).exec();
+//     console.log('Found doctor order by id! --- ', order);
+
+//     const guidanceResponse = await getGuidanceResponse(order);
+//     const metRequirements =
+//       guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
+//     const dispenseStatus = getDispenseStatus(order, guidanceResponse);
+
+//     // Saving and updating
+//     const newOrder = await doctorOrder.findOneAndUpdate(
+//       { _id: req.params.id },
+//       { dispenseStatus, metRequirements },
+//       { new: true }
+//     );
+
+//     res.send(newOrder);
+//     console.log('Updated order');
+//   } catch (error) {
+//     console.log('Error', error);
+//     return error;
+//   }
+// });
 
 /**
- * Route: 'doctorOrders/api/updateRx/:id'
- * Description : 'Updates prescription based on mongo id, used in etasu'
+ * Update prescription status based on mongo id, used in etasu 
  */
-router.patch('/api/updateRx/:id', async (req, res) => {
+const updateRx = async (req, res) => {
   try {
-    // Finding by id
-    const order = await doctorOrder.findById(req.params.id).exec();
+    const { id } = req.body;
+    const order = await doctorOrder.findById(id).exec();
     console.log('Found doctor order by id! --- ', order);
 
     const guidanceResponse = await getGuidanceResponse(order);
-    const metRequirements =
-      guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
+    const metRequirements = guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
     const dispenseStatus = getDispenseStatus(order, guidanceResponse);
 
-    // Saving and updating
     const newOrder = await doctorOrder.findOneAndUpdate(
-      { _id: req.params.id },
+      { _id: id },
       { dispenseStatus, metRequirements },
       { new: true }
     );
 
-    res.send(newOrder);
-    console.log('Updated order');
+    return res.send(newOrder);
   } catch (error) {
-    console.log('Error', error);
-    return error;
+    console.error('Error updating prescription status:', error);
+    return res.status(500).json({ error: 'Failed to update prescription status' });
   }
-});
+};
+
+
+// /**
+//  * Route: 'doctorOrders/api/updateRx/:id/metRequirements'
+//  * Description : 'Updates prescription metRequirements based on mongo id'
+//  */
+// router.patch('/api/updateRx/:id/metRequirements', async (req, res) => {
+//   try {
+//     // Finding by id
+//     const order = await doctorOrder.findById(req.params.id).exec();
+//     console.log('Found doctor order by id! --- ', order);
+
+//     const guidanceResponse = await getGuidanceResponse(order);
+//     const metRequirements =
+//       guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
+
+//     // Saving and updating
+//     const newOrder = await doctorOrder.findOneAndUpdate(
+//       { _id: req.params.id },
+//       { metRequirements },
+//       { new: true }
+//     );
+
+//     res.send(newOrder);
+//     console.log('Updated order');
+//   } catch (error) {
+//     console.log('Error', error);
+//     return error;
+//   }
+// });
 
 /**
- * Route: 'doctorOrders/api/updateRx/:id/metRequirements'
- * Description : 'Updates prescription metRequirements based on mongo id'
+ * Update prescription metRequirements based on mongo id
  */
-router.patch('/api/updateRx/:id/metRequirements', async (req, res) => {
+const updateRxMetRequirements = async (req, res) => {
   try {
-    // Finding by id
-    const order = await doctorOrder.findById(req.params.id).exec();
+    const { id } = req.body;
+    const order = await doctorOrder.findById(id).exec();
     console.log('Found doctor order by id! --- ', order);
 
     const guidanceResponse = await getGuidanceResponse(order);
-    const metRequirements =
-      guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
+    const metRequirements = guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
 
-    // Saving and updating
     const newOrder = await doctorOrder.findOneAndUpdate(
-      { _id: req.params.id },
+      { _id: id },
       { metRequirements },
       { new: true }
     );
 
-    res.send(newOrder);
-    console.log('Updated order');
+    return res.send(newOrder);
   } catch (error) {
-    console.log('Error', error);
-    return error;
+    console.error('Error updating prescription metRequirements:', error);
+    return res.status(500).json({ error: 'Failed to update prescription metRequirements' });
   }
-});
+};
+
+// /*******
+//  * Route: 'doctorOrders/api/updateRx/:id/pickedUp'
+//  * Description : 'Updates prescription dispense status based on mongo id to be picked up '
+//  */
+// router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
+//   let prescriberOrderNumber = null;
+//   try {
+//     const newOrder = await doctorOrder.findOneAndUpdate(
+//       { _id: req.params.id },
+//       { dispenseStatus: 'Picked Up' },
+//       { new: true }
+//     );
+//     res.send(newOrder);
+//     prescriberOrderNumber = newOrder.prescriberOrderNumber;
+//     console.log('Updated dispense status to picked up');
+//   } catch (error) {
+//     console.log('Could not update dispense status', error);
+//     return error;
+//   }
+
+//   try {
+//     // Reach out to EHR to update dispense status as XML
+//     const newRx = await NewRx.findOne({
+//       prescriberOrderNumber: prescriberOrderNumber
+//     });
+//     const rxFill = buildRxFill(newRx);
+//     const status = await axios.post(env.EHR_RXFILL_URL, rxFill, {
+//       headers: {
+//         Accept: 'application/xml', // Expect that the Status that the EHR returns back is in XML
+//         'Content-Type': 'application/xml' // Tell the EHR that the RxFill is in XML
+//       }
+//     });
+//     console.log('Sent RxFill to EHR and received status from EHR', status.data);
+//   } catch (error) {
+//     console.log('Could not send RxFill to EHR', error);
+//     return error;
+//   }
+// });
+
+// /**
+//  * Route : 'doctorOrders/api/getRx/patient/:patientName/drug/:simpleDrugName`
+//  * Description : 'Fetches first available doctor order based on patientFirstName, patientLastName and patientDOB'
+//  *     'To retrieve a specific one for a drug on a given date, supply the drugNdcCode and rxDate in the query parameters'
+//  *     'Required Parameters : patientFirstName, patientLastName patientDOB are part of the path'
+//  *     'Optional Parameters : all remaining values in the orderSchema as query parameters (?drugNdcCode=0245-0571-01,rxDate=2020-07-11)'
+//  */
+// router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (req, res) => {
+//   var searchDict = {
+//     patientFirstName: req.params.patientFirstName,
+//     patientLastName: req.params.patientLastName,
+//     patientDOB: req.params.patientDOB
+//   };
+
+//   if (req.query && Object.keys(req.query).length > 0) {
+//     // add the query parameters
+//     for (const prop in req.query) {
+//       // verify that the parameter is in the orderSchema
+//       if (orderSchema.path(prop) != undefined) {
+//         // add the parameters to the search query
+//         searchDict[prop] = req.query[prop];
+//       }
+//     }
+//   }
+
+//   const prescription = await doctorOrder.findOne(searchDict).exec();
+//   console.log('Found doctor order');
+
+//   res.send(prescription);
+// });
 
 /**
- * Route: 'doctorOrders/api/updateRx/:id/pickedUp'
- * Description : 'Updates prescription dispense status based on mongo id to be picked up '
+ * Fetch prescription based on patient details such as patientFirstName, patientLastName and patientDOB
  */
-router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
-  let prescriberOrderNumber = null;
+const getPatientRx = async (req, res) => {
   try {
-    const newOrder = await doctorOrder.findOneAndUpdate(
-      { _id: req.params.id },
-      { dispenseStatus: 'Picked Up' },
-      { new: true }
-    );
-    res.send(newOrder);
-    prescriberOrderNumber = newOrder.prescriberOrderNumber;
-    console.log('Updated dispense status to picked up');
-  } catch (error) {
-    console.log('Could not update dispense status', error);
-    return error;
-  }
+    const { patientFirstName, patientLastName, patientDOB } = req.body;
+    const searchDict = { patientFirstName, patientLastName, patientDOB };
 
-  try {
-    // Reach out to EHR to update dispense status as XML
-    const newRx = await NewRx.findOne({
-      prescriberOrderNumber: prescriberOrderNumber
-    });
-    const rxFill = buildRxFill(newRx);
-    const status = await axios.post(env.EHR_RXFILL_URL, rxFill, {
-      headers: {
-        Accept: 'application/xml', // Expect that the Status that the EHR returns back is in XML
-        'Content-Type': 'application/xml' // Tell the EHR that the RxFill is in XML
-      }
-    });
-    console.log('Sent RxFill to EHR and received status from EHR', status.data);
-  } catch (error) {
-    console.log('Could not send RxFill to EHR', error);
-    return error;
-  }
-});
-
-/**
- * Route : 'doctorOrders/api/getRx/patient/:patientName/drug/:simpleDrugName`
- * Description : 'Fetches first available doctor order based on patientFirstName, patientLastName and patientDOB'
- *     'To retrieve a specific one for a drug on a given date, supply the drugNdcCode and rxDate in the query parameters'
- *     'Required Parameters : patientFirstName, patientLastName patientDOB are part of the path'
- *     'Optional Parameters : all remaining values in the orderSchema as query parameters (?drugNdcCode=0245-0571-01,rxDate=2020-07-11)'
- */
-router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (req, res) => {
-  var searchDict = {
-    patientFirstName: req.params.patientFirstName,
-    patientLastName: req.params.patientLastName,
-    patientDOB: req.params.patientDOB
-  };
-
-  if (req.query && Object.keys(req.query).length > 0) {
-    // add the query parameters
-    for (const prop in req.query) {
-      // verify that the parameter is in the orderSchema
-      if (orderSchema.path(prop) != undefined) {
-        // add the parameters to the search query
-        searchDict[prop] = req.query[prop];
+    if (req.query && Object.keys(req.query).length > 0) {
+      // Add query parameters if available
+      for (const prop in req.query) {
+        if (orderSchema.path(prop) != undefined) {
+          searchDict[prop] = req.query[prop];
+        }
       }
     }
+
+    const prescription = await doctorOrder.findOne(searchDict).exec();
+    console.log('Found doctor order');
+    return res.send(prescription);
+  } catch (error) {
+    console.error('Error finding prescription:', error);
+    return res.status(500).json({ error: 'Failed to find prescription' });
   }
+};
 
-  const prescription = await doctorOrder.findOne(searchDict).exec();
-  console.log('Found doctor order');
+// /**
+//  * Description : 'Deletes all documents and prescriptions in PIMS'
+//  */
+// router.delete('/api/deleteAll', async (req, res) => {
+//   await doctorOrder.deleteMany({});
+//   console.log('All doctor orders deleted in PIMS!');
+//   await NewRx.deleteMany({});
+//   console.log("All NewRx's deleted in PIMS!");
+//   res.send([]);
+// });
 
-  res.send(prescription);
-});
+// const isRemsDrug = order => {
+//   return medicationRequestToRemsAdmins.some(
+//     entry => Number(order.drugRxnormCode) === Number(entry.rxnorm)
+//   );
+// };
 
 /**
- * Description : 'Deletes all documents and prescriptions in PIMS'
+ * Delete all prescriptions in PIMS
  */
-router.delete('/api/deleteAll', async (req, res) => {
-  await doctorOrder.deleteMany({});
-  console.log('All doctor orders deleted in PIMS!');
-  await NewRx.deleteMany({});
-  console.log("All NewRx's deleted in PIMS!");
-  res.send([]);
-});
-
-const isRemsDrug = order => {
-  return medicationRequestToRemsAdmins.some(
-    entry => Number(order.drugRxnormCode) === Number(entry.rxnorm)
-  );
+const deleteAll = async (_req, res) => {
+  try {
+    await doctorOrder.deleteMany({});
+    console.log('All doctor orders deleted in PIMS!');
+    await NewRx.deleteMany({});
+    console.log("All NewRx's deleted in PIMS!");
+    return res.send([]);
+  } catch (error) {
+    console.error('Error deleting all prescriptions:', error);
+    return res.status(500).json({ error: 'Failed to delete all prescriptions' });
+  }
 };
 
 const getEtasuUrl = order => {
