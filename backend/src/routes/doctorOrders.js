@@ -225,24 +225,39 @@ router.delete('/api/deleteAll', async (req, res) => {
   res.send([]);
 });
 
-const getRemsAdminFhirUrl = order => {
-  const rxnorm = order.drugRxnormCode;
-  const remsDrug = medicationRequestToRemsAdmins.find(entry => {
-    return Number(rxnorm) === Number(entry.rxnorm);
-  });
-  return remsDrug?.remsAdminFhirUrl;
+const isRemsDrug = order => {
+  return medicationRequestToRemsAdmins.some(
+    entry => Number(order.drugRxnormCode) === Number(entry.rxnorm)
+  );
+};
+
+const getEtasuUrl = order => {
+  let baseUrl;
+
+  if (env.USE_INTERMEDIARY) {
+    baseUrl = env.INTERMEDIARY_FHIR_URL;
+  } else {
+    const rxnorm = order.drugRxnormCode;
+    const remsDrug = medicationRequestToRemsAdmins.find(entry => {
+      return Number(rxnorm) === Number(entry.rxnorm);
+    });
+    baseUrl = remsDrug?.remsAdminFhirUrl;
+  }
+
+  const etasuUrl = baseUrl + '/GuidanceResponse/$rems-etasu';
+  return baseUrl ? etasuUrl : null;
 };
 
 const getGuidanceResponse = async order => {
-  const remsAdminFhirUrl = getRemsAdminFhirUrl(order);
+  const etasuUrl = getEtasuUrl(order);
 
-  if (!remsAdminFhirUrl) {
+  if (!etasuUrl) {
     return null;
   }
 
   // Make the etasu call with the auth number if it exists, if not call with patient and medication
   let body = {};
-  if (order.authNumber !== '') {
+  if (order.authNumber !== '' && !env.USE_INTERMEDIARY) {
     body = {
       resourceType: 'Parameters',
       parameter: [
@@ -291,16 +306,14 @@ const getGuidanceResponse = async order => {
     };
   }
 
-  // Reaching out to REMS Admin finding by pt name and drug name
-  const newUrl = remsAdminFhirUrl + '/GuidanceResponse/$rems-etasu';
-
-  const response = await axios.post(newUrl, body, {
+  const response = await axios.post(etasuUrl, body, {
     headers: {
       'content-type': 'application/json'
     }
   });
-  console.log('Retrieved order');
-  const responseResource = response.data.parameter[0].resource;
+  console.log('Retrieved order', response);
+  console.log('URL', etasuUrl);
+  const responseResource = response.data.parameter?.[0]?.resource;
   return responseResource;
 };
 
@@ -359,8 +372,7 @@ async function parseNCPDPScript(newRx) {
     dispenseStatus: 'Pending'
   };
 
-  const isRemsDrug = !!getRemsAdminFhirUrl(incompleteOrder);
-  const metRequirements = isRemsDrug ? [] : null;
+  const metRequirements = isRemsDrug(incompleteOrder) ? [] : null;
   const order = new doctorOrder({ ...incompleteOrder, metRequirements });
   return order;
 }
