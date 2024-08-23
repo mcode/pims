@@ -177,6 +177,14 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
       }
     });
     console.log('Sent RxFill to EHR and received status from EHR', status.data);
+
+    const remsAdminStatus = await axios.post('http://rems-administrator:8090/ncpdp', rxFill, {
+      headers: {
+        'Content-Type': 'application/xml' // Tell the rems admin that the RxFill is in XML
+      }
+    });
+
+    console.log('Sent RxFill to rems admin and received status from rems admin: ', remsAdminStatus);
   } catch (error) {
     console.log('Could not send RxFill to EHR', error);
     return error;
