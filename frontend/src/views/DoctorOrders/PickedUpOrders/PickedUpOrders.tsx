@@ -1,11 +1,10 @@
-import OrderCard from '../OrderCard/OrderCard';
-import './PickedUpOrders.css';
+import OrderCard, { TabStatus } from '../OrderCard/OrderCard';
 
 const PickedUpOrders = () => {
   return (
-    <div className="PickedUpOrders">
-      <h1>PickedUpOrders</h1>
-      <OrderCard tabStatus={'Picked Up'} />
+    <div>
+      <h1>Picked Up Orders</h1>
+      <OrderCard tabStatus={TabStatus.PICKED_UP} />
     </div>
   );
 };

@@ -1,11 +1,10 @@
-import OrderCard from '../OrderCard/OrderCard';
-import './NewOrders.css';
+import OrderCard, { TabStatus } from '../OrderCard/OrderCard';
 
 const NewOrders = () => {
   return (
-    <div className="NewOrders">
-      <h1>NewOrders</h1>
-      <OrderCard tabStatus={'Pending'} />
+    <div>
+      <h1>New Orders</h1>
+      <OrderCard tabStatus={TabStatus.PENDING} />
     </div>
   );
 };

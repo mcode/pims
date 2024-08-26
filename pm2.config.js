@@ -4,25 +4,25 @@
  *
  * This is mainly used in our Docker image.
  */
- module.exports = {
+module.exports = {
   apps: [
     // API Server
     {
-      name: 'API',
-      script: 'npm start',
-      cwd: 'backend',
+      name: "API",
+      script: "npm start",
+      cwd: "backend",
       env_production: {
-        NODE_ENV: 'production'
-      }
+        NODE_ENV: "production",
+      },
     },
-    // Fronted Server
+    // Frontend Server
     {
-      name: 'FrontEnd',
-      script: 'npm start',
-      cwd: 'frontend',
+      name: "FrontEnd",
+      script: "npm start",
+      cwd: "frontend",
       env_production: {
-        NODE_ENV: 'production'
-      }
-    }
-  ]
+        NODE_ENV: "production",
+      },
+    },
+  ],
 };

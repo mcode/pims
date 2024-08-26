@@ -1,6 +1,5 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import OrderCard from './OrderCard';
+import OrderCard, { TabStatus } from './OrderCard';
 import axios from 'axios';
 
 const doctorOrders = [
@@ -24,7 +23,7 @@ const doctorOrders = [
     patientPostalCode: '00008',
     patientStateProvince: 'Westeros',
     pickupDate: 'Tue Dec 13 2022',
-    quanitities: '90',
+    quantities: '90',
     rxDate: '2020-07-11',
     simpleDrugName: 'Turalio',
     total: 1800
@@ -36,7 +35,7 @@ jest.mock('axios');
 describe('<OrderCard />', () => {
   it('renders the order card with no doctor orders', async () => {
     axios.get = jest.fn().mockImplementationOnce(() => Promise.resolve({ data: [] }));
-    render(<OrderCard tabStatus={'Pending'} />);
+    render(<OrderCard tabStatus={TabStatus.PENDING} />);
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: /no orders yet\./i })).toBeInTheDocument();
@@ -45,21 +44,13 @@ describe('<OrderCard />', () => {
 
   it('renders the order card and any doctor orders', async () => {
     axios.get = jest.fn().mockImplementationOnce(() => Promise.resolve({ data: doctorOrders }));
-    render(<OrderCard tabStatus={'Pending'} />);
+    render(<OrderCard tabStatus={TabStatus.PENDING} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Jon Snow/i)).toBeInTheDocument();
       expect(screen.getByText(/1996/i)).toBeInTheDocument();
       expect(screen.getByText(/Turalio/i)).toBeInTheDocument();
       expect(screen.getByText(/Pending/i)).toBeInTheDocument();
-      // expect(screen.getByTestId('quantities')).toBeInTheDocument();
-      // expect(screen.getByTestId('drugPrice')).toBeInTheDocument();
-      // expect(screen.getByTestId('total')).toBeInTheDocument();
-      // expect(screen.getByTestId('doctorName')).toBeInTheDocument();
-      // expect(screen.getByTestId('doctorID')).toBeInTheDocument();
-      // expect(screen.getByTestId('doctorContact')).toBeInTheDocument();
-      // expect(screen.getByTestId('doctorEmail')).toBeInTheDocument();
-      // expect(screen.getByTestId('pickupDate')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /remove all/i })).toBeInTheDocument();
     });
   });

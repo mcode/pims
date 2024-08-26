@@ -1,8 +1,8 @@
 .App {
   text-align: center;
-  background-color:#0A192A;
+  background-color: #0a192a;
   padding: 20px;
-  margin-bottom:20px;
+  margin-bottom: 20px;
 }
 
 .App-logo {
@@ -43,33 +43,31 @@
 .NavButtons {
   list-style: none;
   text-decoration: none;
-  margin-left:5px;
+  margin-left: 5px;
 }
 
 .App h1 {
-  color:white;
+  color: white;
   line-height: 1.3;
   letter-spacing: 0.00938em;
-  font-family: "Roboto","Helvetica","Arial",sans-serif;
+  font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
 .logo {
-grid-area:main;
-text-align: left;
-margin-right: auto;
-display: inline-flex;
-box-sizing: unset;
+  grid-area: main;
+  text-align: left;
+  margin-right: auto;
+  display: inline-flex;
+  box-sizing: unset;
 }
 
 .links {
-  grid-area:right;
+  grid-area: right;
   margin-left: auto;
   margin-top: 25px;
 }
 
-.containerg{
+.containerg {
   display: grid;
   grid-template-areas: ' main right';
 }
-
-
