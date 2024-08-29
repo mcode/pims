@@ -14,4 +14,4 @@ RUN npm install pm2 -g
 EXPOSE 5050
 EXPOSE 5051
 
-CMD [ "pm2-docker", "pm2.config.js" ]
+CMD ./dockerRunnerProd.sh
