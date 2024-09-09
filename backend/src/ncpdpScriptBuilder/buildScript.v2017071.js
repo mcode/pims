@@ -50,34 +50,32 @@ function buildMessage(inputMessage, body) {
 }
 
 export function buildRxStatus(newRxMessageConvertedToJSON) {
-  const body = 
-    [
-      {
-        Status: [
-          {
-            Code: '000' // Placeholder: This is dependent on individual pharmacy
-          }
-        ]
-      }
-    ];
+  const body = [
+    {
+      Status: [
+        {
+          Code: '000' // Placeholder: This is dependent on individual pharmacy
+        }
+      ]
+    }
+  ];
   const rxStatus = buildMessage(newRxMessageConvertedToJSON, body);
   const builder = new XMLBuilder(XML_BUILDER_OPTIONS);
   return builder.build(rxStatus);
 }
 
 export function buildRxError(newRxMessageConvertedToJSON, errorMessage) {
-  const body = 
-    [
-      {
-        Error: [
-          {
-            Code: 900,              // Transaction was rejected
-            DescriptionCode: 1000,  // Unable to identify based on information submitted
-            Description: errorMessage
-          }
-        ]
-      }
-    ];
+  const body = [
+    {
+      Error: [
+        {
+          Code: 900, // Transaction was rejected
+          DescriptionCode: 1000, // Unable to identify based on information submitted
+          Description: errorMessage
+        }
+      ]
+    }
+  ];
   const rxStatus = buildMessage(newRxMessageConvertedToJSON, body);
   const builder = new XMLBuilder(XML_BUILDER_OPTIONS);
   return builder.build(rxStatus);
