@@ -6,7 +6,7 @@ import axios from 'axios';
 import bodyParser from 'body-parser';
 import bpx from 'body-parser-xml';
 import env from 'var';
-import { buildRxStatus, buildRxFill } from '../ncpdpScriptBuilder/buildScript.v2017071.js';
+import { buildRxStatus, buildRxFill, buildRxError } from '../ncpdpScriptBuilder/buildScript.v2017071.js';
 import { NewRx } from '../database/schemas/newRx.js';
 import { medicationRequestToRemsAdmins } from '../database/data.js';
 
@@ -52,12 +52,10 @@ router.get('/api/getRx/pickedUp', async (_req, res) => {
 });
 
 /**
- * Route: 'doctorOrders/api/addRx'
- * Description : 'Saves a new Doctor Order to db'
+ * Description: Process addRx / NewRx NCPDP message.
  */
-router.post('/api/addRx', async (req, res) => {
-  // Parsing incoming NCPDP SCRIPT XML to doctorOrder JSON
-  const newRxMessageConvertedToJSON = req.body;
+export async function processNewRx(newRxMessageConvertedToJSON) {
+  console.log('processNewRx NCPDP SCRIPT message');
   const newOrder = await parseNCPDPScript(newRxMessageConvertedToJSON);
 
   try {
@@ -68,21 +66,33 @@ router.post('/api/addRx', async (req, res) => {
     await newRx.save();
     console.log('Saved NewRx');
   } catch (error) {
-    console.log('Could not store the NewRx', error);
-    return error;
+    let errorStr = 'Could not store the NewRx';
+    console.log(errorStr, error);
+    return buildRxError(newRxMessageConvertedToJSON, errorStr);
   }
 
   try {
     await newOrder.save();
     console.log('DoctorOrder was saved');
   } catch (error) {
-    console.log('ERROR! duplicate found, prescription already exists', error);
-    return error;
+    let errorStr = 'ERROR! duplicate found, prescription already exists';
+    console.log(errorStr, error);
+    return buildRxError(errorStr);
   }
 
-  const RxStatus = buildRxStatus(newRxMessageConvertedToJSON);
-  res.send(RxStatus);
-  console.log('Sent RxStatus');
+  return buildRxStatus(newRxMessageConvertedToJSON);
+}
+
+/**
+ * Route: 'doctorOrders/api/addRx'
+ * Description : 'Saves a new Doctor Order to db'
+ */
+router.post('/api/addRx', async (req, res) => {
+  // Parsing incoming NCPDP SCRIPT XML to doctorOrder JSON
+  const newRxMessageConvertedToJSON = req.body;
+  const status = await processNewRx(newRxMessageConvertedToJSON);
+  res.send(status);
+  console.log('Sent Status/Error');
 });
 
 /**
