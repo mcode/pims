@@ -10,7 +10,7 @@
     "cors": "^2.8.5",
     "express": "^4.20.0",
     "fast-xml-parser": "^4.3.2",
-    "mongoose": "^6.11.4",
+    "mongoose": "^6.13.0",
     "var": "^0.4.0",
     "web-vitals": "^2.1.4",
     "xml2js": "^0.6.0"
