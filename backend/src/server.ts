@@ -1,5 +1,6 @@
 import express from 'express';
 import doctorOrders from './routes/doctorOrders.js';
+import ncpdp from './routes/ncpdp.js';
 const app = express();
 
 import cors from 'cors';
@@ -23,6 +24,7 @@ async function main() {
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cors(options));
   app.use('/doctorOrders', doctorOrders);
+  app.use('/ncpdp', ncpdp);
 
   let server: any = app;
 
