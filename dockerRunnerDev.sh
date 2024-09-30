@@ -4,6 +4,10 @@
 trap 'kill $CONTINUOUS_INSTALL_PID $SERVER_PID $BACKEND_SERVER_PID; exit' INT
 
 mkdir logs 
+touch ./logs/frontend_installer.log
+touch ./logs/frontend_runner.log
+touch ./logs/backend_installer.log
+touch ./logs/backend_runner.log
 
 # Reset log file content for new application boot
 echo "*** Logs for continuous frontend installer ***" > ./logs/frontend_installer.log
