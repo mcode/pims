@@ -12,6 +12,7 @@ RUN npm install
 WORKDIR /home/node/app
 
 EXPOSE 5050
+EXPOSE 5051
 
 HEALTHCHECK --interval=90s --start-period=90s --timeout=10m --retries=10 CMD (wget --no-verbose --tries=1 --spider http://localhost:5051/doctorOrders/api/getRx/pending && wget --no-verbose --tries=1 --spider http://localhost:5050) || exit 1
 
