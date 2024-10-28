@@ -33,6 +33,7 @@
     "axios-mock-adapter": "^1.21.2",
     "chai": "^4.3.7",
     "chai-http": "^4.3.0",
+    "cookies": "^0.9.1",
     "eslint": "^8.28.0",
     "eslint-config-prettier": "^6.15.0",
     "eslint-plugin-prettier": "^4.2.1",
