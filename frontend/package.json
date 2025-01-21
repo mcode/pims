@@ -16,7 +16,6 @@
     "@types/react-dom": "^18.0.7",
     "axios": "^1.7.8",
     "@vitejs/plugin-react": "^4.3.3",
-
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.4",
