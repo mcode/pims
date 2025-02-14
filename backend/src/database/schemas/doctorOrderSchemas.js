@@ -39,7 +39,7 @@ export const orderSchema = new mongoose.Schema({
           }
         }
       }
-    ] | null
+    ]
 });
 
 // Compound index is used to prevent duplicates based off of the given parameters
