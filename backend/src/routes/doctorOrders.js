@@ -253,7 +253,7 @@ const isRemsDrug = order => {
     if (order.drugNdcCode && entry.ndc) {
       return order.drugNdcCode === entry.ndc;
     }
-    
+
     if (order.drugRxnormCode && entry.rxnorm) {
       return Number(order.drugRxnormCode) === Number(entry.rxnorm);
     }
@@ -272,7 +272,7 @@ const getEtasuUrl = order => {
       if (order.drugNdcCode && entry.ndc) {
         return order.drugNdcCode === entry.ndc;
       }
-      
+
       if (order.drugRxnormCode && entry.rxnorm) {
         return Number(order.drugRxnormCode) === Number(entry.rxnorm);
       }
@@ -307,7 +307,7 @@ const getGuidanceResponse = async order => {
     };
   } else {
     let medicationCoding = [];
-    
+
     if (order.drugNdcCode) {
       medicationCoding.push({
         system: 'http://hl7.org/fhir/sid/ndc',
@@ -315,7 +315,7 @@ const getGuidanceResponse = async order => {
         display: order.drugNames
       });
     }
-    
+
     if (order.drugRxnormCode) {
       medicationCoding.push({
         system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
@@ -326,7 +326,7 @@ const getGuidanceResponse = async order => {
       const remsDrug = medicationRequestToRemsAdmins.find(entry => {
         return order.drugNdcCode && entry.ndc && order.drugNdcCode === entry.ndc;
       });
-      
+
       if (remsDrug && remsDrug.rxnorm) {
         medicationCoding.push({
           system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
@@ -424,12 +424,15 @@ async function parseNCPDPScript(newRx) {
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
     drugNames: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription,
     simpleDrugName: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription.split(' ')[0],
-    
-    drugNdcCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode?.Code || 
-                 newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.NDC || null,
-    
-    drugRxnormCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.DrugDBCode?.Code || null,
-    
+
+    drugNdcCode:
+      newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode?.Code ||
+      newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.NDC ||
+      null,
+
+    drugRxnormCode:
+      newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.DrugDBCode?.Code || null,
+
     rxDate: newRx.Message.Body.NewRx.MedicationPrescribed.WrittenDate.Date,
     drugPrice: 200, // Add later?
     quantities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
