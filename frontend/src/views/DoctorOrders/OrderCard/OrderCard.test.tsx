@@ -11,7 +11,7 @@ const doctorOrders = [
     doctorID: '1122334455',
     doctorName: 'Dr. Jane Doe',
     drugNames: 'Turalio 200 MG Oral Capsule',
-    drugNdcCode: '65597-402-20',
+    drugNdcCode: '65597-407-20',
     drugPrice: 200,
     metRequirements: [],
     patientCity: 'Winterfell',
