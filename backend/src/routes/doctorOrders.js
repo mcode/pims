@@ -249,9 +249,17 @@ router.delete('/api/deleteAll', async (req, res) => {
 });
 
 const isRemsDrug = order => {
-  return medicationRequestToRemsAdmins.some(
-    entry => Number(order.drugRxnormCode) === Number(entry.rxnorm)
-  );
+  return medicationRequestToRemsAdmins.some(entry => {
+    if (order.drugNdcCode && entry.ndc) {
+      return order.drugNdcCode === entry.ndc;
+    }
+    
+    if (order.drugRxnormCode && entry.rxnorm) {
+      return Number(order.drugRxnormCode) === Number(entry.rxnorm);
+    }
+
+    return false;
+  });
 };
 
 const getEtasuUrl = order => {
@@ -260,9 +268,16 @@ const getEtasuUrl = order => {
   if (env.USE_INTERMEDIARY) {
     baseUrl = env.INTERMEDIARY_FHIR_URL;
   } else {
-    const rxnorm = order.drugRxnormCode;
     const remsDrug = medicationRequestToRemsAdmins.find(entry => {
-      return Number(rxnorm) === Number(entry.rxnorm);
+      if (order.drugNdcCode && entry.ndc) {
+        return order.drugNdcCode === entry.ndc;
+      }
+      
+      if (order.drugRxnormCode && entry.rxnorm) {
+        return Number(order.drugRxnormCode) === Number(entry.rxnorm);
+      }
+
+      return false;
     });
     baseUrl = remsDrug?.remsAdminFhirUrl;
   }
@@ -291,6 +306,36 @@ const getGuidanceResponse = async order => {
       ]
     };
   } else {
+    let medicationCoding = [];
+    
+    if (order.drugNdcCode) {
+      medicationCoding.push({
+        system: 'http://hl7.org/fhir/sid/ndc',
+        code: order.drugNdcCode,
+        display: order.drugNames
+      });
+    }
+    
+    if (order.drugRxnormCode) {
+      medicationCoding.push({
+        system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+        code: order.drugRxnormCode,
+        display: order.drugNames
+      });
+    } else {
+      const remsDrug = medicationRequestToRemsAdmins.find(entry => {
+        return order.drugNdcCode && entry.ndc && order.drugNdcCode === entry.ndc;
+      });
+      
+      if (remsDrug && remsDrug.rxnorm) {
+        medicationCoding.push({
+          system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+          code: remsDrug.rxnorm.toString(),
+          display: order.drugNames
+        });
+      }
+    }
+
     body = {
       resourceType: 'Parameters',
       parameter: [
@@ -315,13 +360,7 @@ const getGuidanceResponse = async order => {
             resourceType: 'Medication',
             id: order.prescriberOrderNumber,
             code: {
-              coding: [
-                {
-                  system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
-                  code: order.drugRxnormCode,
-                  display: order.drugNames
-                }
-              ]
+              coding: medicationCoding
             }
           }
         }
@@ -356,7 +395,7 @@ const getDispenseStatus = (order, guidanceResponse) => {
  * Return : Mongoose schema of a newOrder
  */
 async function parseNCPDPScript(newRx) {
-  // Parsing  XML NCPDP SCRIPT from EHR
+  // Parsing XML NCPDP SCRIPT from EHR
   const incompleteOrder = {
     caseNumber: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
     authNumber: newRx.Message.Header.AuthorizationNumber,
@@ -385,8 +424,12 @@ async function parseNCPDPScript(newRx) {
       newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
     drugNames: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription,
     simpleDrugName: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription.split(' ')[0],
-    drugNdcCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode.Code,
-    drugRxnormCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.DrugDBCode.Code,
+    
+    drugNdcCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode?.Code || 
+                 newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.NDC || null,
+    
+    drugRxnormCode: newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.DrugDBCode?.Code || null,
+    
     rxDate: newRx.Message.Body.NewRx.MedicationPrescribed.WrittenDate.Date,
     drugPrice: 200, // Add later?
     quantities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
