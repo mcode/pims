@@ -20,6 +20,7 @@ import PickedUpButton from './PickedUpButton';
 import VerifyButton from './VerifyButton';
 
 export type DoctorOrder = {
+  orderId?: string;
   caseNumber?: string;
   authNumber?: string;
   patientName?: string;
@@ -111,7 +112,7 @@ const OrderCard = (props: { tabStatus: TabStatus }) => {
     return (
       <Card sx={{ bgcolor: '#F5F5F7' }}>
         {doctorOrders.map(row => (
-          <Card key={row.caseNumber} sx={{ minWidth: 275, margin: 2, boxShadow: '10px' }}>
+          <Card key={row.orderId} sx={{ minWidth: 275, margin: 2, boxShadow: '10px' }}>
             <Card>
               <CardContent>
                 <Box>

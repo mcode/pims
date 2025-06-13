@@ -278,15 +278,15 @@ const getGuidanceResponse = async order => {
     return null;
   }
 
-  // Make the etasu call with the auth number if it exists, if not call with patient and medication
+  // Make the etasu call with the case number if it exists, if not call with patient and medication
   let body = {};
-  if (order.authNumber !== '' && !env.USE_INTERMEDIARY) {
+  if (order.caseNumber !== '' && !env.USE_INTERMEDIARY) {
     body = {
       resourceType: 'Parameters',
       parameter: [
         {
-          name: 'authNumber',
-          valueString: order.authNumber
+          name: 'caseNumber',
+          valueString: order.caseNumber
         }
       ]
     };
@@ -358,8 +358,8 @@ const getDispenseStatus = (order, guidanceResponse) => {
 async function parseNCPDPScript(newRx) {
   // Parsing  XML NCPDP SCRIPT from EHR
   const incompleteOrder = {
-    caseNumber: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
-    authNumber: newRx.Message.Header.AuthorizationNumber,
+    orderId: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
+    caseNumber: newRx.Message.Header.AuthorizationNumber,
     prescriberOrderNumber: newRx.Message.Header.PrescriberOrderNumber,
     patientName:
       newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName +
