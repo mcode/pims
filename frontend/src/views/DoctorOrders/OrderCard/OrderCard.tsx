@@ -22,7 +22,6 @@ import VerifyButton from './VerifyButton';
 export type DoctorOrder = {
   orderId?: string;
   caseNumber?: string;
-  authNumber?: string;
   patientName?: string;
   patientDOB?: string;
   doctorName?: string;
