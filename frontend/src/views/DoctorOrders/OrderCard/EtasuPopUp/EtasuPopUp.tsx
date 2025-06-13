@@ -28,16 +28,15 @@ type Requirement = {
   };
 };
 
-type AuthNumber = {
-  name: 'auth_number';
+type CaseNumber = {
+  name: 'case_number';
   valueString: string;
 };
 
-type MetRequirements = Requirement | AuthNumber;
+type MetRequirements = Requirement | CaseNumber;
 
 export type DoctorOrder = {
   caseNumber?: string;
-  authNumber?: string;
   patientName?: string;
   patientDOB?: string;
   doctorName?: string;
@@ -69,7 +68,7 @@ const EtasuPopUp = (props: any) => {
   const [doctorOrder, setDoctorOrder] = useState<DoctorOrder>();
 
   const etasuElements = (
-    (doctorOrder?.metRequirements || []).filter(m => m.name !== 'auth_number') as Requirement[]
+    (doctorOrder?.metRequirements || []).filter(m => m.name !== 'case_number') as Requirement[]
   ).sort((first: Requirement, second: Requirement) => {
     // Keep the other forms unsorted.
     if (second.name.includes('Patient Status Update')) {
