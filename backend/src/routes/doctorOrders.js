@@ -280,7 +280,7 @@ const getGuidanceResponse = async order => {
 
   // Make the etasu call with the case number if it exists, if not call with patient and medication
   let body = {};
-  if (order.caseNumber !== '' && !env.USE_INTERMEDIARY) {
+  if (order.caseNumber && !env.USE_INTERMEDIARY) {
     body = {
       resourceType: 'Parameters',
       parameter: [
@@ -334,7 +334,7 @@ const getGuidanceResponse = async order => {
       'content-type': 'application/json'
     }
   });
-  console.log('Retrieved order', response);
+  console.log('Retrieved order', JSON.stringify(response.data, null, 4));
   console.log('URL', etasuUrl);
   const responseResource = response.data.parameter?.[0]?.resource;
   return responseResource;
