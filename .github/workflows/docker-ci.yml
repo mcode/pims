@@ -2,19 +2,18 @@ name: Docker Image CI
 
 on:
   pull_request:
-    branches: [ main, dev ]
+    branches: [main, dev]
   workflow_dispatch:
 
-
 jobs:
-  docker-ci: 
+  docker-ci:
     runs-on: ubuntu-latest
     steps:
-
-    - name: Checkout Repository
-      uses: actions/checkout@v3
-      with:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
           submodules: true
+          clean: true
 
-    - name: Test Server Docker image Builds
-      run: docker build .
+      - name: Test Server Docker image Builds
+        run: docker build .

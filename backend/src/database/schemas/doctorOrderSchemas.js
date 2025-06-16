@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 export const orderSchema = new mongoose.Schema({
+  orderId: String,
   caseNumber: String,
-  authNumber: String,
   prescriberOrderNumber: String,
   patientName: String,
   patientFirstName: String,
@@ -25,21 +25,20 @@ export const orderSchema = new mongoose.Schema({
   total: Number,
   pickupDate: String,
   dispenseStatus: String,
-  metRequirements:
-    [
-      {
-        name: String,
-        resource: {
-          status: String,
-          moduleUri: String,
-          resourceType: String,
-          note: [{ text: String }],
-          subject: {
-            reference: String
-          }
+  metRequirements: [
+    {
+      name: String,
+      resource: {
+        status: String,
+        moduleUri: String,
+        resourceType: String,
+        note: [{ text: String }],
+        subject: {
+          reference: String
         }
       }
-    ]
+    }
+  ]
 });
 
 // Compound index is used to prevent duplicates based off of the given parameters
