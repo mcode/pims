@@ -404,10 +404,7 @@ async function parseNCPDPScript(newRx) {
     orderId: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
     caseNumber: newRx.Message.Header.AuthorizationNumber,
     prescriberOrderNumber: newRx.Message.Header.PrescriberOrderNumber,
-    patientName:
-      patient.HumanPatient.Name.FirstName +
-      ' ' +
-      patient.HumanPatient.Name.LastName,
+    patientName: patient.HumanPatient.Name.FirstName + ' ' + patient.HumanPatient.Name.LastName,
     patientFirstName: patient.HumanPatient.Name.FirstName,
     patientLastName: patient.HumanPatient.Name.LastName,
     patientDOB: patient.HumanPatient.DateOfBirth.Date,
@@ -420,12 +417,9 @@ async function parseNCPDPScript(newRx) {
       prescriber.NonVeterinarian.Name.FirstName +
       ' ' +
       prescriber.NonVeterinarian.Name.LastName,
-    doctorContact:
-      prescriber.NonVeterinarian.CommunicationNumbers.PrimaryTelephone
-        ?.Number,
+    doctorContact: prescriber.NonVeterinarian.CommunicationNumbers.PrimaryTelephone?.Number,
     doctorID: prescriber.NonVeterinarian.Identification.NPI,
-    doctorEmail:
-      prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
+    doctorEmail: prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
     drugNames: medicationPrescribed.DrugDescription,
     simpleDrugName: medicationPrescribed.DrugDescription?.split(' ')[0],
 
@@ -434,8 +428,7 @@ async function parseNCPDPScript(newRx) {
       medicationPrescribed.DrugCoded.NDC ||
       null,
 
-    drugRxnormCode:
-      medicationPrescribed.DrugCoded.DrugDBCode?.Code || null,
+    drugRxnormCode: medicationPrescribed.DrugCoded.DrugDBCode?.Code || null,
 
     rxDate: medicationPrescribed.WrittenDate.Date,
     drugPrice: 200, // Add later?
