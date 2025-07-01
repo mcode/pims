@@ -396,50 +396,52 @@ const getDispenseStatus = (order, guidanceResponse) => {
  */
 async function parseNCPDPScript(newRx) {
   // Parsing XML NCPDP SCRIPT from EHR
+  const patient = newRx.Message.Body.NewRx.Patient;
+  const prescriber = newRx.Message.Body.NewRx.Prescriber;
+  const medicationPrescribed = newRx.Message.Body.NewRx.MedicationPrescribed;
+
   const incompleteOrder = {
     orderId: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
     caseNumber: newRx.Message.Header.AuthorizationNumber,
     prescriberOrderNumber: newRx.Message.Header.PrescriberOrderNumber,
-    patientName:
-      newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName +
-      ' ' +
-      newRx.Message.Body.NewRx.Patient.HumanPatient.Name.LastName,
-    patientFirstName: newRx.Message.Body.NewRx.Patient.HumanPatient.Name.FirstName,
-    patientLastName: newRx.Message.Body.NewRx.Patient.HumanPatient.Name.LastName,
-    patientDOB: newRx.Message.Body.NewRx.Patient.HumanPatient.DateOfBirth.Date,
-    patientCity: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.City,
-    patientStateProvince: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.StateProvince,
-    patientPostalCode: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.PostalCode,
-    patientCountry: newRx.Message.Body.NewRx.Patient.HumanPatient.Address.Country,
+    patientName: patient.HumanPatient.Name.FirstName + ' ' + patient.HumanPatient.Name.LastName,
+    patientFirstName: patient.HumanPatient.Name.FirstName,
+    patientLastName: patient.HumanPatient.Name.LastName,
+    patientDOB: patient.HumanPatient.DateOfBirth.Date,
+    patientCity: patient.HumanPatient.Address.City,
+    patientStateProvince: patient.HumanPatient.Address.StateProvince,
+    patientPostalCode: patient.HumanPatient.Address.PostalCode,
+    patientCountry: patient.HumanPatient.Address.Country,
     doctorName:
       'Dr. ' +
-      newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Name.FirstName +
+      prescriber.NonVeterinarian.Name.FirstName +
       ' ' +
-      newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Name.LastName,
-    doctorContact:
-      newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.PrimaryTelephone
-        ?.Number,
-    doctorID: newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.Identification.NPI,
-    doctorEmail:
-      newRx.Message.Body.NewRx.Prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
-    drugNames: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription,
-    simpleDrugName: newRx.Message.Body.NewRx.MedicationPrescribed.DrugDescription.split(' ')[0],
+      prescriber.NonVeterinarian.Name.LastName,
+    doctorContact: prescriber.NonVeterinarian.CommunicationNumbers.PrimaryTelephone?.Number,
+    doctorID: prescriber.NonVeterinarian.Identification.NPI,
+    doctorEmail: prescriber.NonVeterinarian.CommunicationNumbers.ElectronicMail,
+    drugNames: medicationPrescribed.DrugDescription,
+    simpleDrugName: medicationPrescribed.DrugDescription?.split(' ')[0],
 
     drugNdcCode:
-      newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.ProductCode?.Code ||
-      newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.NDC ||
+      medicationPrescribed.DrugCoded.ProductCode?.Code ||
+      medicationPrescribed.DrugCoded.NDC ||
       null,
 
-    drugRxnormCode:
-      newRx.Message.Body.NewRx.MedicationPrescribed.DrugCoded.DrugDBCode?.Code || null,
+    drugRxnormCode: medicationPrescribed.DrugCoded.DrugDBCode?.Code || null,
 
-    rxDate: newRx.Message.Body.NewRx.MedicationPrescribed.WrittenDate.Date,
+    rxDate: medicationPrescribed.WrittenDate.Date,
     drugPrice: 200, // Add later?
-    quantities: newRx.Message.Body.NewRx.MedicationPrescribed.Quantity.Value,
+    quantities: medicationPrescribed.Quantity.Value,
     total: 1800,
     pickupDate: 'Tue Dec 13 2022', // Add later?
     dispenseStatus: 'Pending'
   };
+
+  if (incompleteOrder.drugNames === undefined || incompleteOrder.drugNames === 'undefined') {
+    incompleteOrder.drugNames = incompleteOrder.drugNdcCode;
+    incompleteOrder.simpleDrugName = incompleteOrder.drugNdcCode;
+  }
 
   const metRequirements = isRemsDrug(incompleteOrder) ? [] : null;
   const order = new doctorOrder({ ...incompleteOrder, metRequirements });
