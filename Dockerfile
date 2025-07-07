@@ -8,6 +8,7 @@ RUN npm install
 
 WORKDIR /home/node/app/frontend
 RUN npm install
+RUN npm run build
 
 WORKDIR /home/node/app
 
