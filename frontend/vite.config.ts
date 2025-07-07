@@ -9,7 +9,9 @@ export default defineConfig({
   base: '',
   plugins: [react()],
   preview: {
-    allowedHosts: ['.mitre.org', '.elb.us-east-1.amazonaws.com']
+    allowedHosts: ['.mitre.org', '.elb.us-east-1.amazonaws.com'],
+    port: parseInt(process.env.PORT!), 
+    host: true,  
   },
   define: {
     'process.env': process.env
