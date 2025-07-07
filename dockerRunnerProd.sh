@@ -1,7 +1,8 @@
 #!/bin/sh
 
 cd frontend
-( npm run start ) & SERVER_PID=$!
+npm run build
+( npm run preview ) & SERVER_PID=$!
 
 cd ../backend
 ( npm run start ) & BACKEND_SERVER_PID=$!
