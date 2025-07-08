@@ -13,10 +13,12 @@ axios.defaults.baseURL = process.env.REACT_APP_PIMS_BACKEND_URL
   : 'http://localhost:' +
     (process.env.REACT_APP_PIMS_BACKEND_PORT ? process.env.REACT_APP_PIMS_BACKEND_PORT : '5051');
 
+const basename = process.env.REACT_APP_VITE_BASE?.replace(/\/$/, '') || '';
+
 function App() {
   return (
     <Box>
-      <Router>
+      <Router basename={basename}>
         <div className="App">
           <Container className="NavContainer" maxWidth="xl">
             <div className="containerg">
