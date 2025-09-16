@@ -21,6 +21,8 @@ async function main() {
     origin: env.ALLOWED_ORIGIN
   };
 
+  console.log('CORS OPTIONS: ' + JSON.stringify(options));
+
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cors(options));
   app.use('/doctorOrders', doctorOrders);
