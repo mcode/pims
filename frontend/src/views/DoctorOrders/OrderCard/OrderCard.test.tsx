@@ -14,14 +14,14 @@ const doctorOrders = [
     drugNdcCode: '65597-407-20',
     drugPrice: 200,
     metRequirements: [],
-    patientCity: 'Winterfell',
+    patientCity: 'Boston',
     patientCountry: 'US',
     patientDOB: '1996-06-01',
-    patientFirstName: 'Jon',
+    patientFirstName: 'John',
     patientLastName: 'Snow',
-    patientName: 'Jon Snow',
-    patientPostalCode: '00008',
-    patientStateProvince: 'Westeros',
+    patientName: 'John Snow',
+    patientPostalCode: '02134',
+    patientStateProvince: 'MA',
     pickupDate: 'Tue Dec 13 2022',
     quantities: '90',
     rxDate: '2020-07-11',
@@ -47,7 +47,7 @@ describe('<OrderCard />', () => {
     render(<OrderCard tabStatus={TabStatus.PENDING} />);
 
     await waitFor(() => {
-      expect(screen.getByText(/Jon Snow/i)).toBeInTheDocument();
+      expect(screen.getByText(/John Snow/i)).toBeInTheDocument();
       expect(screen.getByText(/1996/i)).toBeInTheDocument();
       expect(screen.getByText(/Turalio/i)).toBeInTheDocument();
       expect(screen.getByText(/Pending/i)).toBeInTheDocument();
