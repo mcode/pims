@@ -6,6 +6,8 @@ import { BrowserRouter as Router, Link, Route, Routes } from 'react-router-dom';
 import './App.css';
 import DoctorOrders from './views/DoctorOrders/DoctorOrders';
 import Login from './views/Login/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
 import axios from 'axios';
 
 axios.defaults.baseURL = process.env.REACT_APP_PIMS_BACKEND_URL
@@ -17,36 +19,44 @@ const basename = process.env.REACT_APP_VITE_BASE?.replace(/\/$/, '') || '';
 
 function App() {
   return (
-    <Box>
-      <Router basename={basename}>
-        <div className="App">
-          <Container className="NavContainer" maxWidth="xl">
-            <div className="containerg">
-              <div className="logo">
-                <LocalPharmacyIcon
-                  sx={{ color: 'white', fontSize: 40, paddingTop: 2.5, paddingRight: 2.5 }}
-                />
-                <h1>Pharmacy</h1>
+    <AuthProvider>
+      <Box>
+        <Router basename={basename}>
+          <div className="App">
+            <Container className="NavContainer" maxWidth="xl">
+              <div className="containerg">
+                <div className="logo">
+                  <LocalPharmacyIcon
+                    sx={{ color: 'white', fontSize: 40, paddingTop: 2.5, paddingRight: 2.5 }}
+                  />
+                  <h1>Pharmacy</h1>
+                </div>
+                <div className="links">
+                  <Link className="NavButtons" to="/DoctorOrders">
+                    <Button variant="contained">Doctor Orders</Button>
+                  </Link>
+                  <Link className="NavButtons" to="/Login">
+                    <Button variant="contained">Login</Button>
+                  </Link>
+                </div>
               </div>
-              <div className="links">
-                <Link className="NavButtons" to="/DoctorOrders">
-                  <Button variant="contained">Doctor Orders</Button>
-                </Link>
-                <Link className="NavButtons" to="/Login">
-                  <Button variant="contained">Login</Button>
-                </Link>
-              </div>
-            </div>
-          </Container>
-        </div>
-        <Routes>
-          {/* Initial load to login page, will need to change to check for user authentication to load to correct page  */}
-          <Route path="/" element={<Login />} />
-          <Route path="/Login" element={<Login />}></Route>
-          <Route path="/DoctorOrders" element={<DoctorOrders />}></Route>
-        </Routes>
-      </Router>
-    </Box>
+            </Container>
+          </div>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/Login" element={<Login />} />
+            <Route
+              path="/DoctorOrders"
+              element={
+                <ProtectedRoute>
+                  <DoctorOrders />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </Box>
+    </AuthProvider>
   );
 }
 

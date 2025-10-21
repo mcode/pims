@@ -3,10 +3,14 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { Avatar, Box, Button, Container, CssBaseline, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import config from '../../config.json';
 
 export default function Login() {
-  const [token, setToken] = React.useState<string | null>(null);
+  const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -23,16 +27,16 @@ export default function Login() {
           withCredentials: true
         })
         .then(result => {
-          // do something with the token
           const scope = result.data.scope.split(' ').includes(config.scopeId);
           if (scope) {
-            setToken(result.data.access_token);
+            login(result.data.access_token);
+            navigate('/DoctorOrders');
           } else {
             console.error('Unauthorized User');
           }
         })
         .catch(err => {
-          if (err.response.status === 401) {
+          if (err.response?.status === 401) {
             console.error('Unknown user');
           } else {
             console.error(err);
@@ -52,7 +56,7 @@ export default function Login() {
           alignItems: 'center'
         }}
       >
-        {token ? (
+        {isAuthenticated ? (
           <Avatar sx={{ m: 1, bgcolor: 'secondary.success' }}>
             <LockOpenOutlinedIcon />
           </Avatar>
