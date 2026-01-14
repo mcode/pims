@@ -398,6 +398,137 @@ const isRemsDrug = order => {
   });
 };
 
+
+/**
+ * Get FHIR ETASU URL for the order
+ * Used for GuidanceResponse calls (View ETASU)
+ */
+const getEtasuUrl = order => {
+  let baseUrl;
+
+  if (env.USE_INTERMEDIARY) {
+    baseUrl = env.INTERMEDIARY_FHIR_URL;
+  } else {
+    const remsDrug = medicationRequestToRemsAdmins.find(entry => {
+      if (order.drugNdcCode && entry.ndc) {
+        return order.drugNdcCode === entry.ndc;
+      }
+
+      if (order.drugRxnormCode && entry.rxnorm) {
+        return Number(order.drugRxnormCode) === Number(entry.rxnorm);
+      }
+
+      return false;
+    });
+    baseUrl = remsDrug?.remsAdminFhirUrl;
+  }
+
+  const etasuUrl = baseUrl + '/GuidanceResponse/$rems-etasu';
+  return baseUrl ? etasuUrl : null;
+};
+
+/**
+ * Get FHIR GuidanceResponse for ETASU requirements
+ * Used by View ETASU button
+ */
+const getGuidanceResponse = async order => {
+  const etasuUrl = getEtasuUrl(order);
+
+  if (!etasuUrl) {
+    return null;
+  }
+
+  // Make the etasu call with the case number if it exists, if not call with patient and medication
+  let body = {};
+  if (order.caseNumber && !env.USE_INTERMEDIARY) {
+    body = {
+      resourceType: 'Parameters',
+      parameter: [
+        {
+          name: 'caseNumber',
+          valueString: order.caseNumber
+        }
+      ]
+    };
+  } else {
+    let medicationCoding = [];
+
+    if (order.drugNdcCode) {
+      medicationCoding.push({
+        system: 'http://hl7.org/fhir/sid/ndc',
+        code: order.drugNdcCode,
+        display: order.drugNames
+      });
+    }
+
+    if (order.drugRxnormCode) {
+      medicationCoding.push({
+        system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+        code: order.drugRxnormCode,
+        display: order.drugNames
+      });
+    } else {
+      const remsDrug = medicationRequestToRemsAdmins.find(entry => {
+        return order.drugNdcCode && entry.ndc && order.drugNdcCode === entry.ndc;
+      });
+
+      if (remsDrug && remsDrug.rxnorm) {
+        medicationCoding.push({
+          system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+          code: remsDrug.rxnorm.toString(),
+          display: order.drugNames
+        });
+      }
+    }
+
+    body = {
+      resourceType: 'Parameters',
+      parameter: [
+        {
+          name: 'patient',
+          resource: {
+            resourceType: 'Patient',
+            id: order.prescriberOrderNumber,
+            name: [
+              {
+                family: order.patientLastName,
+                given: order.patientName.split(' '),
+                use: 'official'
+              }
+            ],
+            birthDate: order.patientDOB
+          }
+        },
+        {
+          name: 'medication',
+          resource: {
+            resourceType: 'Medication',
+            id: order.prescriberOrderNumber,
+            code: {
+              coding: medicationCoding
+            }
+          }
+        }
+      ]
+    };
+  }
+
+  try {
+    const response = await axios.post(etasuUrl, body, {
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+    console.log('Retrieved FHIR GuidanceResponse', JSON.stringify(response.data, null, 4));
+    console.log('URL', etasuUrl);
+    const responseResource = response.data.parameter?.[0]?.resource;
+    return responseResource;
+  } catch (error) {
+    console.log('Error fetching FHIR GuidanceResponse:', error.message);
+    return null;
+  }
+};
+
 /**
  * Send NCPDP REMSInitiationRequest to REMS Admin
  * Per NCPDP spec: Sent when prescription arrives to check REMS case status
