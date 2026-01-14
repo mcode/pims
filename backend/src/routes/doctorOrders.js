@@ -120,8 +120,9 @@ export async function processNewRx(newRxMessageConvertedToJSON) {
         }
 
         if (initiationResponse.status === 'CLOSED') {
-          updateData.denialReasonCodes = initiationResponse.reasonCodes.join(',');
-          console.log('REMSInitiation CLOSED:', initiationResponse.reasonCodes);
+          // Per NCPDP spec: only one denial code at a time
+          updateData.denialReasonCodes = initiationResponse.reasonCode;
+          console.log('REMSInitiation CLOSED:', initiationResponse.reasonCode);
         }
 
         await doctorOrder.updateOne({ _id: newOrder._id }, updateData);
@@ -199,10 +200,11 @@ router.patch('/api/updateRx/:id', async (req, res) => {
       updateData.denialReasonCodes = null;
       console.log('APPROVED:', ncpdpResponse.authorizationNumber);
     } else if (ncpdpResponse.status === 'DENIED') {
-      updateData.denialReasonCodes = ncpdpResponse.reasonCodes.join(',');
+      // Per NCPDP spec: only one denial code at a time
+      updateData.denialReasonCodes = ncpdpResponse.reasonCode;
       updateData.remsNote = ncpdpResponse.remsNote;
       updateData.caseNumber = ncpdpResponse.caseId;
-      console.log('DENIED:', ncpdpResponse.reasonCodes);
+      console.log('DENIED:', ncpdpResponse.reasonCode);
     }
 
     const newOrder = await doctorOrder.findOneAndUpdate(
@@ -493,9 +495,9 @@ const sendREMSRequest = async order => {
  * Extracts case info, status, and requirements
  */
 const parseREMSInitiationResponse = parsedXml => {
-  const message = parsedXml?.Message || parsedXml?.message;
-  const body = message?.Body || message?.body;
-  const initResponse = body?.REMSInitiationResponse || body?.remsinitiationresponse;
+  const message = parsedXml?.message;
+  const body = message?.body;
+  const initResponse = body?.remsinitiationresponse;
   console.log(message);
   console.log(initResponse);
 
@@ -504,35 +506,32 @@ const parseREMSInitiationResponse = parsedXml => {
     return null;
   }
 
-  const response = initResponse.Response || initResponse.response;
-  const responseStatus = response?.ResponseStatus || response?.responsestatus;
+  const response = initResponse.response;
+  const responseStatus = response?.responsestatus;
 
   // Check for Closed status (requirements not met)
-  const closed = responseStatus?.Closed || responseStatus?.closed;
+  const closed = responseStatus?.closed;
   if (closed) {
-    let reasonCodes = closed.ReasonCode || closed.reasoncode;
-    if (!Array.isArray(reasonCodes)) {
-      reasonCodes = [reasonCodes];
-    }
-    const remsNote = closed.REMSNote || closed.remsnote || '';
+    const reasonCode = closed.reasoncode;
+    const remsNote = closed.remsnote || '';
 
     return {
       status: 'CLOSED',
-      reasonCodes: reasonCodes,
+      reasonCode: reasonCode,
       remsNote: remsNote,
-      metRequirements: parseReasonCodesToRequirements(reasonCodes, remsNote)
+      metRequirements: parseReasonCodeToRequirements(reasonCode, remsNote)
     };
   }
 
   // Extract case ID and patient ID from successful initiation
-  const patient = initResponse.Patient || initResponse.patient;
-  const humanPatient = patient?.HumanPatient || patient?.humanpatient;
-  const identification = humanPatient?.Identification || humanPatient?.identification;
-  const remsPatientId = identification?.REMSPatientID || identification?.remspatientid;
+  const patient = initResponse.patient;
+  const humanPatient = patient?.humanpatient;
+  const identification = humanPatient?.identification;
+  const remsPatientId = identification?.remspatientid;
 
   // Check if there's a case number in the response
   let caseNumber = null;
-  const medication = initResponse.MedicationPrescribed || initResponse.medicationprescribed;
+  const medication = initResponse.medicationprescribed;
   if (medication) {
     // Some implementations include case number in initiation success
     caseNumber = remsPatientId; // Often the case number is returned as patient ID
@@ -551,9 +550,9 @@ const parseREMSInitiationResponse = parsedXml => {
  * Extracts authorization status, case ID, and ETASU requirements from QuestionSet
  */
 const parseREMSResponse = parsedXml => {
-  const message = parsedXml?.Message || parsedXml?.message;
-  const body = message?.Body || message?.body;
-  const remsResponse = body?.REMSResponse || body?.remsresponse;
+  const message = parsedXml?.message;
+  const body = message?.body;
+  const remsResponse = body?.remsresponse;
   console.log(message);
   console.log(remsResponse);
 
@@ -562,23 +561,20 @@ const parseREMSResponse = parsedXml => {
     return null;
   }
 
-  const request = remsResponse.Request || remsResponse.request;
-  const solicitedModel = request?.SolicitedModel || request?.solicitedmodel;
-  const questionSet = solicitedModel?.QuestionSet || solicitedModel?.questionset;
+  const request = remsResponse.request;
+  const solicitedModel = request?.solicitedmodel;
+  const questionSet = solicitedModel?.questionset;
 
-  const response = remsResponse.Response || remsResponse.response;
-  const responseStatus = response?.ResponseStatus || response?.responsestatus;
+  const response = remsResponse.response;
+  const responseStatus = response?.responsestatus;
 
   // Check for APPROVED status
-  const approved = responseStatus?.Approved || responseStatus?.approved;
+  const approved = responseStatus?.approved;
   if (approved) {
-    const caseId = approved.REMSCaseID || approved.remscaseid;
-    const authNumber = approved.REMSAuthorizationNumber || approved.remsauthorizationnumber;
-    const authPeriod = approved.AuthorizationPeriod || approved.authorizationperiod;
-    const expiration =
-      authPeriod?.ExpirationDate?.Date ||
-      authPeriod?.expirationdate?.date ||
-      authPeriod?.expirationdate?.Date;
+    const caseId = approved.remscaseid;
+    const authNumber = approved.remsauthorizationnumber;
+    const authPeriod = approved.authorizationperiod;
+    const expiration = authPeriod?.expirationdate?.date;
 
     // Parse QuestionSet to extract ETASU that were checked
     const etasuInfo = questionSet ? parseQuestionSetToETASU(questionSet) : null;
@@ -619,20 +615,18 @@ const parseREMSResponse = parsedXml => {
   }
 
   // Check for DENIED status
-  const denied = responseStatus?.Denied || responseStatus?.denied;
+  const denied = responseStatus?.denied;
   if (denied) {
-    const caseId = denied.REMSCaseID || denied.remscaseid;
-    let reasonCodes = denied.DeniedReasonCode || denied.deniedreason || denied.deniedreason.code;
-    if (!Array.isArray(reasonCodes)) {
-      reasonCodes = [reasonCodes];
-    }
-    const remsNote = denied.REMSNote || denied.remsnote || '';
+    const caseId = denied.remscaseid;
+    // Per NCPDP spec: DeniedReasonCode is a single code, not an array
+    const reasonCode = denied.deniedreason code;
+    const remsNote = denied.remsnote || '';
 
     // Parse QuestionSet if present to show which ETASU failed
     const etasuInfo = questionSet ? parseQuestionSetToETASU(questionSet) : null;
 
     // Convert to metRequirements with failure status
-    let metRequirements = parseReasonCodesToRequirements(reasonCodes, remsNote);
+    let metRequirements = parseReasonCodeToRequirements(reasonCode, remsNote);
 
     // Add QuestionSet information if available
     if (etasuInfo && etasuInfo.questions.length > 0) {
@@ -655,7 +649,7 @@ const parseREMSResponse = parsedXml => {
     return {
       status: 'DENIED',
       caseId: caseId,
-      reasonCodes: reasonCodes,
+      reasonCode: reasonCode,
       remsNote: remsNote,
       metRequirements: metRequirements
     };
@@ -665,11 +659,10 @@ const parseREMSResponse = parsedXml => {
 };
 
 /**
- * Convert NCPDP reason codes to metRequirements format
- * Per NCPDP spec: Reason codes indicate which stakeholder requirements are not met
+ * Convert NCPDP reason code to metRequirements format
+ * Per NCPDP spec: Reason code indicates which stakeholder requirement is not met
  */
-const parseReasonCodesToRequirements = (reasonCodes, remsNote) => {
-  const codes = Array.isArray(reasonCodes) ? reasonCodes : [reasonCodes];
+const parseReasonCodeToRequirements = (reasonCode, remsNote) => {
   const requirements = [];
 
   // NCPDP Reason Code mapping per spec
@@ -684,24 +677,22 @@ const parseReasonCodesToRequirements = (reasonCodes, remsNote) => {
     EZ: { name: 'Patient Deactivated/Decertified', stakeholder: 'patient' }
   };
 
-  codes.forEach(code => {
-    const mapping = reasonCodeMap[code] || {
-      name: `REMS Requirement (${code})`,
-      stakeholder: 'unknown'
-    };
+  const mapping = reasonCodeMap[reasonCode] || {
+    name: `REMS Requirement (${reasonCode})`,
+    stakeholder: 'unknown'
+  };
 
-    requirements.push({
-      name: mapping.name,
-      resource: {
-        status: 'pending',
-        resourceType: 'Task',
-        moduleUri: `rems-requirement-${code}`,
-        note: [{ text: remsNote || `${mapping.name} required` }],
-        subject: {
-          reference: mapping.stakeholder
-        }
+  requirements.push({
+    name: mapping.name,
+    resource: {
+      status: 'pending',
+      resourceType: 'Task',
+      moduleUri: `rems-requirement-${reasonCode}`,
+      note: [{ text: remsNote || `${mapping.name} required` }],
+      subject: {
+        reference: mapping.stakeholder
       }
-    });
+    }
   });
 
   return requirements;
