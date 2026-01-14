@@ -106,8 +106,7 @@ export async function processNewRx(newRxMessageConvertedToJSON) {
 
       if (initiationResponse) {
         const updateData = {
-          remsNote: initiationResponse.remsNote,
-          metRequirements: initiationResponse.metRequirements || []
+          remsNote: initiationResponse.remsNote
         };
 
         if (initiationResponse.caseNumber) {
@@ -181,8 +180,7 @@ router.patch('/api/updateRx/:id', async (req, res) => {
 
     // Update based on NCPDP response
     const updateData = {
-      dispenseStatus: getDispenseStatus(order, ncpdpResponse),
-      metRequirements: ncpdpResponse.metRequirements || order.metRequirements
+      dispenseStatus: getDispenseStatus(order, ncpdpResponse)
     };
 
     if (ncpdpResponse.status === 'APPROVED') {
@@ -213,35 +211,6 @@ router.patch('/api/updateRx/:id', async (req, res) => {
 
     res.send(newOrder);
     console.log('Updated order with NCPDP response');
-  } catch (error) {
-    console.log('Error', error);
-    return error;
-  }
-});
-
-/**
- * Route: 'doctorOrders/api/updateRx/:id/metRequirements'
- * Description : 'Updates prescription metRequirements based on mongo id'
- */
-router.patch('/api/updateRx/:id/metRequirements', async (req, res) => {
-  try {
-    // Finding by id
-    const order = await doctorOrder.findById(req.params.id).exec();
-    console.log('Found doctor order by id! --- ', order);
-
-    const guidanceResponse = await getGuidanceResponse(order);
-    const metRequirements =
-      guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
-
-    // Saving and updating
-    const newOrder = await doctorOrder.findOneAndUpdate(
-      { _id: req.params.id },
-      { metRequirements },
-      { new: true }
-    );
-
-    res.send(newOrder);
-    console.log('Updated order');
   } catch (error) {
     console.log('Error', error);
     return error;
@@ -385,6 +354,7 @@ router.delete('/api/deleteAll', async (req, res) => {
 });
 
 const isRemsDrug = order => {
+  console.log(order);
   return medicationRequestToRemsAdmins.some(entry => {
     if (order.drugNdcCode && entry.ndc) {
       return order.drugNdcCode === entry.ndc;
@@ -647,7 +617,6 @@ const parseREMSInitiationResponse = parsedXml => {
       status: 'CLOSED',
       reasonCode: reasonCode,
       remsNote: remsNote,
-      metRequirements: parseReasonCodeToRequirements(reasonCode, remsNote)
     };
   }
 
@@ -669,7 +638,6 @@ const parseREMSInitiationResponse = parsedXml => {
     status: 'OPEN',
     remsPatientId: remsPatientId,
     caseNumber: caseNumber,
-    metRequirements: [] // No outstanding requirements
   };
 };
 
@@ -702,30 +670,6 @@ const parseREMSResponse = parsedXml => {
     const authPeriod = approved.authorizationperiod;
     const expiration = authPeriod?.expirationdate?.date;
 
-    // Create summary of met requirements
-    let etasuSummary = '';
-    let metRequirements = [];
-
-    if (etasuInfo && etasuInfo.questions.length > 0) {
-      etasuSummary = etasuInfo.questions
-        .map(q => `• ${q.questionText}: ${q.answer}`)
-        .join('\n');
-
-      // Convert questions to metRequirements format
-      metRequirements = etasuInfo.questions.map((q, idx) => ({
-        name: q.questionText,
-        resource: {
-          status: 'success',
-          resourceType: 'Observation',
-          moduleUri: q.questionId,
-          note: [{ text: `Verified: ${q.answer}` }],
-          subject: {
-            reference: 'patient'
-          }
-        }
-      }));
-    }
-
     return {
       status: 'APPROVED',
       caseId: caseId,
@@ -733,7 +677,6 @@ const parseREMSResponse = parsedXml => {
       authorizationExpiration: expiration,
       remsNote: 'All REMS requirements have been met and verified. Authorization granted for dispensing.',
       etasuSummary: etasuSummary,
-      metRequirements: metRequirements
     };
   }
 
@@ -744,59 +687,17 @@ const parseREMSResponse = parsedXml => {
     const reasonCode = denied.deniedreasoncode;
     const remsNote = denied.remsnote || '';
 
-    // Convert to metRequirements with failure status
-    let metRequirements = parseReasonCodeToRequirements(reasonCode, remsNote);
+ 
 
     return {
       status: 'DENIED',
       caseId: caseId,
       reasonCode: reasonCode,
       remsNote: remsNote,
-      metRequirements: metRequirements
     };
   }
 
   return null;
-};
-
-/**
- * Convert NCPDP reason code to metRequirements format
- * Per NCPDP spec: Reason code indicates which stakeholder requirement is not met
- */
-const parseReasonCodeToRequirements = (reasonCode, remsNote) => {
-  const requirements = [];
-
-  // NCPDP Reason Code mapping per spec
-  const reasonCodeMap = {
-    EM: { name: 'Patient Enrollment/Certification', stakeholder: 'patient' },
-    ES: { name: 'Prescriber Enrollment/Certification', stakeholder: 'prescriber' },
-    EO: { name: 'Pharmacy Enrollment/Certification', stakeholder: 'pharmacy' },
-    EC: { name: 'Case Information', stakeholder: 'system' },
-    ER: { name: 'REMS Program Error', stakeholder: 'system' },
-    EX: { name: 'Prescriber Deactivated/Decertified', stakeholder: 'prescriber' },
-    EY: { name: 'Pharmacy Deactivated/Decertified', stakeholder: 'pharmacy' },
-    EZ: { name: 'Patient Deactivated/Decertified', stakeholder: 'patient' }
-  };
-
-  const mapping = reasonCodeMap[reasonCode] || {
-    name: `REMS Requirement (${reasonCode})`,
-    stakeholder: 'unknown'
-  };
-
-  requirements.push({
-    name: mapping.name,
-    resource: {
-      status: 'pending',
-      resourceType: 'Task',
-      moduleUri: `rems-requirement-${reasonCode}`,
-      note: [{ text: remsNote || `${mapping.name} required` }],
-      subject: {
-        reference: mapping.stakeholder
-      }
-    }
-  });
-
-  return requirements;
 };
 
 /**
