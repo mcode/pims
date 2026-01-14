@@ -27,7 +27,7 @@ export const orderSchema = new mongoose.Schema({
   dispenseStatus: String,
   authorizationNumber: String,
   authorizationExpiration: String,
-  denialReasonCodes: String,
+  denialReasonCode: String,
   remsNote: String,
   metRequirements: [
     {

@@ -120,7 +120,7 @@ export async function processNewRx(newRxMessageConvertedToJSON) {
         }
 
         if (initiationResponse.status === 'CLOSED') {
-          updateData.denialReasonCodes = initiationResponse.reasonCode;
+          updateData.denialReasonCode = initiationResponse.reasonCode;
           console.log('REMSInitiation CLOSED:', initiationResponse.reasonCode);
         }
 
@@ -196,10 +196,10 @@ router.patch('/api/updateRx/:id', async (req, res) => {
         approvalNote += `\n\nETASU Requirements Met:\n${ncpdpResponse.etasuSummary}`;
       }
       updateData.remsNote = approvalNote;
-      updateData.denialReasonCodes = null;
+      updateData.denialReasonCode = null;
       console.log('APPROVED:', ncpdpResponse.authorizationNumber);
     } else if (ncpdpResponse.status === 'DENIED') {
-      updateData.denialReasonCodes = ncpdpResponse.reasonCode;
+      updateData.denialReasonCode = ncpdpResponse.reasonCode;
       updateData.remsNote = ncpdpResponse.remsNote;
       updateData.caseNumber = ncpdpResponse.caseId;
       console.log('DENIED:', ncpdpResponse.reasonCode);
@@ -261,7 +261,7 @@ router.patch('/api/updateRx/:id/metRequirements', async (req, res) => {
       updateData.authorizationNumber = remsResponse.authorizationNumber;
       updateData.authorizationExpiration = remsResponse.authorizationExpiration;
     } else if (remsResponse.status === 'DENIED') {
-      updateData.denialReasonCodes = remsResponse.reasonCodes.join(',');
+      updateData.denialReasonCode = remsResponse.reasonCodes;
     }
 
     const newOrder = await doctorOrder.findOneAndUpdate(
