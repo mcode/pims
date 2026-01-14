@@ -560,7 +560,6 @@ const parseREMSResponse = parsedXml => {
   }
 
   const request = remsResponse.request;
-  const solicitedModel = request?.solicitedmodel;
 
   const response = remsResponse.response;
   const responseStatus = response?.responsestatus;
