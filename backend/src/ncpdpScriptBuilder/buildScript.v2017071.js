@@ -100,17 +100,44 @@ export function buildRxError(newRxMessageConvertedToJSON, errorMessage) {
 export const buildRxFill = newRx => {
   const { Message } = JSON.parse(newRx.serializedJSON);
   const { Header, Body } = Message;
-  console.log('Building RxFill per NCPDP spec');
+  console.log('Building RxFill per NCPDP SCRIPT');
   const time = new Date();
+
+  // Extract medication data from NewRx
+  const medicationPrescribed = Body.NewRx.MedicationPrescribed;
+  const drugCoded = medicationPrescribed.DrugCoded;
+
+  const medicationDispensed = {
+    DrugDescription: medicationPrescribed.DrugDescription,
+    DrugCoded: {
+      Strength: drugCoded.Strength ? {
+        StrengthValue: drugCoded.Strength.StrengthValue,
+        StrengthForm: drugCoded.Strength.StrengthForm,
+        StrengthUnitOfMeasure: drugCoded.Strength.StrengthUnitOfMeasure
+      } : undefined
+    },
+    Quantity: {
+      Value: medicationPrescribed.Quantity.Value,
+      CodeListQualifier: medicationPrescribed.Quantity.CodeListQualifier || '87',
+      QuantityUnitOfMeasure: medicationPrescribed.Quantity.QuantityUnitOfMeasure
+    },
+    DaysSupply: medicationPrescribed.DaysSupply,
+    WrittenDate: medicationPrescribed.WrittenDate,
+    Substitutions: medicationPrescribed.Substitutions?.Substitutions || 
+                   medicationPrescribed.Substitutions || '0',
+    NumberOfRefills: medicationPrescribed.Refills?.Quantity || 
+                     medicationPrescribed.NumberOfRefills || 0,
+    Sig: medicationPrescribed.Sig
+  };
 
   const message = {
     Message: {
-      '@@DatatypesVersion': '2024011',
-      '@@TransportVersion': '2024011',
+      '@@DatatypesVersion': '20170715',
+      '@@TransportVersion': '20170715',
       '@@TransactionDomain': 'SCRIPT',
-      '@@TransactionVersion': '2024011',
-      '@@StructuresVersion': '2024011',
-      '@@ECLVersion': '2024011',
+      '@@TransactionVersion': '20170715',
+      '@@StructuresVersion': '20170715',
+      '@@ECLVersion': '20170715',
       Header: [
         {
           To: {
@@ -127,6 +154,7 @@ export const buildRxFill = newRx => {
         { MessageID: uuidv4() },
         { RelatesToMessageID: Header.MessageID },
         { SentTime: time.toISOString() },
+        { RxReferenceNumber: Header.MessageID },
         { PrescriberOrderNumber: Header.PrescriberOrderNumber }
       ],
       Body: [
@@ -149,7 +177,7 @@ export const buildRxFill = newRx => {
                 City: MOCK_VALUE,
                 StateProvince: MOCK_VALUE,
                 PostalCode: MOCK_VALUE,
-                Country: MOCK_VALUE
+                CountryCode: 'US'
               },
               CommunicationNumbers: {
                 PrimaryTelephone: {
@@ -158,7 +186,7 @@ export const buildRxFill = newRx => {
               }
             },
             Prescriber: Body.NewRx.Prescriber,
-            MedicationPrescribed: Body.NewRx.MedicationPrescribed
+            MedicationDispensed: medicationDispensed
           }
         }
       ]
