@@ -221,57 +221,56 @@ router.patch('/api/updateRx/:id', async (req, res) => {
 
 /**
  * Route: 'doctorOrders/api/updateRx/:id/metRequirements'
- * Description : 'Refreshes metRequirements via NCPDP REMSRequest'
+ * Description : 'Updates prescription metRequirements based on mongo id'
  */
 router.patch('/api/updateRx/:id/metRequirements', async (req, res) => {
   try {
+    // Finding by id
     const order = await doctorOrder.findById(req.params.id).exec();
     console.log('Found doctor order by id! --- ', order);
 
-    // Non-REMS drugs have no requirements
-    if (!isRemsDrug(order)) {
-      res.send(order);
-      return;
-    }
+    const guidanceResponse = await getGuidanceResponse(order);
+    const metRequirements =
+      guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
 
-    // Check if we have a case number
-    if (!order.caseNumber) {
-      console.log('No case number available - need REMSInitiation first');
-      res.send(order);
-      return;
-    }
-
-    // REMS drugs with case number - refresh via REMSRequest
-    console.log('Refreshing REMS requirements via REMSRequest for case:', order.caseNumber);
-    const remsResponse = await sendREMSRequest(order);
-
-    if (!remsResponse) {
-      res.send(order);
-      console.log('REMSRequest failed');
-      return;
-    }
-
-    const updateData = {
-      metRequirements: remsResponse.metRequirements || order.metRequirements,
-      remsNote: remsResponse.remsNote
-    };
-
-    if (remsResponse.status === 'APPROVED') {
-      // Don't change dispense status here - only update requirements info
-      updateData.authorizationNumber = remsResponse.authorizationNumber;
-      updateData.authorizationExpiration = remsResponse.authorizationExpiration;
-    } else if (remsResponse.status === 'DENIED') {
-      updateData.denialReasonCode = remsResponse.reasonCodes;
-    }
-
+    // Saving and updating
     const newOrder = await doctorOrder.findOneAndUpdate(
       { _id: req.params.id },
-      updateData,
+      { metRequirements },
       { new: true }
     );
 
     res.send(newOrder);
-    console.log('Updated metRequirements from NCPDP REMSRequest');
+    console.log('Updated order');
+  } catch (error) {
+    console.log('Error', error);
+    return error;
+  }
+});
+
+/**
+ * Route: 'doctorOrders/api/updateRx/:id/metRequirements'
+ * Description : 'Updates prescription metRequirements based on mongo id'
+ */
+router.patch('/api/updateRx/:id/metRequirements', async (req, res) => {
+  try {
+    // Finding by id
+    const order = await doctorOrder.findById(req.params.id).exec();
+    console.log('Found doctor order by id! --- ', order);
+
+    const guidanceResponse = await getGuidanceResponse(order);
+    const metRequirements =
+      guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
+
+    // Saving and updating
+    const newOrder = await doctorOrder.findOneAndUpdate(
+      { _id: req.params.id },
+      { metRequirements },
+      { new: true }
+    );
+
+    res.send(newOrder);
+    console.log('Updated order');
   } catch (error) {
     console.log('Error', error);
     return error;
