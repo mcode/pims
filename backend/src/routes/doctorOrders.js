@@ -190,9 +190,6 @@ router.patch('/api/updateRx/:id', async (req, res) => {
       
       // Format approval note with ETASU summary
       let approvalNote = `APPROVED - Authorization: ${ncpdpResponse.authorizationNumber}, Expires: ${ncpdpResponse.authorizationExpiration}`;
-      if (ncpdpResponse.etasuSummary) {
-        approvalNote += `\n\nETASU Requirements Met:\n${ncpdpResponse.etasuSummary}`;
-      }
       updateData.remsNote = approvalNote;
       updateData.denialReasonCode = null;
       console.log('APPROVED:', ncpdpResponse.authorizationNumber);
@@ -676,7 +673,6 @@ const parseREMSResponse = parsedXml => {
       authorizationNumber: authNumber,
       authorizationExpiration: expiration,
       remsNote: 'All REMS requirements have been met and verified. Authorization granted for dispensing.',
-      etasuSummary: etasuSummary,
     };
   }
 
