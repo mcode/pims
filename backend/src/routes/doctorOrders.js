@@ -120,7 +120,6 @@ export async function processNewRx(newRxMessageConvertedToJSON) {
         }
 
         if (initiationResponse.status === 'CLOSED') {
-          // Per NCPDP spec: only one denial code at a time
           updateData.denialReasonCodes = initiationResponse.reasonCode;
           console.log('REMSInitiation CLOSED:', initiationResponse.reasonCode);
         }
@@ -200,7 +199,6 @@ router.patch('/api/updateRx/:id', async (req, res) => {
       updateData.denialReasonCodes = null;
       console.log('APPROVED:', ncpdpResponse.authorizationNumber);
     } else if (ncpdpResponse.status === 'DENIED') {
-      // Per NCPDP spec: only one denial code at a time
       updateData.denialReasonCodes = ncpdpResponse.reasonCode;
       updateData.remsNote = ncpdpResponse.remsNote;
       updateData.caseNumber = ncpdpResponse.caseId;
@@ -618,8 +616,7 @@ const parseREMSResponse = parsedXml => {
   const denied = responseStatus?.denied;
   if (denied) {
     const caseId = denied.remscaseid;
-    // Per NCPDP spec: DeniedReasonCode is a single code, not an array
-    const reasonCode = denied.deniedreason code;
+    const reasonCode = denied.deniedreasoncode;
     const remsNote = denied.remsnote || '';
 
     // Parse QuestionSet if present to show which ETASU failed
