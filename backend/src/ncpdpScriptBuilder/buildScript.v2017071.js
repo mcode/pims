@@ -110,6 +110,10 @@ export const buildRxFill = newRx => {
   const medicationDispensed = {
     DrugDescription: medicationPrescribed.DrugDescription,
     DrugCoded: {
+      ProductCode: drugCoded.ProductCode ? {
+        Code: drugCoded.ProductCode.Code,
+        Qualifier: drugCoded.ProductCode.Qualifier
+      } : undefined,
       Strength: drugCoded.Strength ? {
         StrengthValue: drugCoded.Strength.StrengthValue,
         StrengthForm: drugCoded.Strength.StrengthForm,
