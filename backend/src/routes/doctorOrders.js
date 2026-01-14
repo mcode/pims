@@ -70,8 +70,6 @@ router.get('/api/getRx/pickedUp', async (_req, res) => {
  * Description: Process addRx / NewRx NCPDP message.
  */
 export async function processNewRx(newRxMessageConvertedToJSON) {
-  console.log('processNewRx NCPDP SCRIPT message');
-  console.log(JSON.stringify(newRxMessageConvertedToJSON));
   const newOrder = await parseNCPDPScript(newRxMessageConvertedToJSON);
 
   try {
@@ -143,6 +141,8 @@ export async function processNewRx(newRxMessageConvertedToJSON) {
 router.post('/api/addRx', async (req, res) => {
   // Parsing incoming NCPDP SCRIPT XML to doctorOrder JSON
   const newRxMessageConvertedToJSON = req.body;
+  console.log('processNewRx NCPDP SCRIPT message');
+  console.log(JSON.stringify(req.body));
   const status = await processNewRx(newRxMessageConvertedToJSON);
   res.send(status);
   console.log('Sent Status/Error');
@@ -464,6 +464,7 @@ const sendREMSRequest = async order => {
 
     const remsRequest = buildREMSRequest(newRx, order.caseNumber);
     console.log('Sending REMSRequest to REMS Admin for case:', order.caseNumber);
+    console.log(remsRequest)
 
     const response = await axios.post(
       env.REMS_ADMIN_NCPDP,
@@ -661,70 +662,6 @@ const parseREMSResponse = parsedXml => {
   }
 
   return null;
-};
-
-/**
- * Parse NCPDP QuestionSet to extract ETASU requirements
- * Per NCPDP spec: QuestionSet contains the REMS questions and answers
- */
-const parseQuestionSetToETASU = questionSet => {
-  const header = questionSet.Header || questionSet.header;
-  const questions = questionSet.Question || questionSet.question;
-
-  const questionArray = Array.isArray(questions) ? questions : [questions];
-
-  const parsedQuestions = questionArray
-    .filter(q => q) // Filter out null/undefined
-    .map(q => {
-      const questionId = q.QuestionID || q.questionid;
-      const sequenceNumber = q.SequenceNumber || q.sequencenumber;
-      const questionText = q.QuestionText || q.questiontext;
-      const questionType = q.QuestionType || q.questiontype;
-
-      // Extract answer if present
-      let answer = 'Not answered';
-      if (questionType) {
-        const select = questionType.Select || questionType.select;
-        if (select) {
-          const answerObj = select.Answer || select.answer;
-          if (answerObj) {
-            const submittedAnswer =
-              answerObj.SubmitterProvidedAnswer || answerObj.submitterprovided.answer;
-            if (submittedAnswer) {
-              const choiceId = submittedAnswer.ChoiceID || submittedAnswer.choiceid;
-
-              // Find the choice text
-              const choices = select.Choice || select.choice;
-              const choiceArray = Array.isArray(choices) ? choices : [choices];
-
-              const matchingChoice = choiceArray.find(c => {
-                const cId = c.ChoiceID || c.choiceid;
-                return cId === choiceId;
-              });
-
-              if (matchingChoice) {
-                answer = matchingChoice.ChoiceText || matchingChoice.choicetext || choiceId;
-              } else {
-                answer = choiceId || 'Yes';
-              }
-            }
-          }
-        }
-      }
-
-      return {
-        questionId,
-        sequenceNumber,
-        questionText,
-        answer
-      };
-    });
-
-  return {
-    questionSetId: header?.QuestionSetID || header?.questionsetid,
-    questionSetTitle: header?.QuestionSetTitle || header?.questionsettitle,
-    questions: parsedQuestions
-  };
 };
 
 /**
