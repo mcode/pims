@@ -545,7 +545,7 @@ const parseREMSInitiationResponse = parsedXml => {
 
 /**
  * Parse NCPDP REMSResponse per spec
- * Extracts authorization status, case ID, and ETASU requirements from QuestionSet
+ * Extracts authorization status, case ID, and NCPDP rejection code
  */
 const parseREMSResponse = parsedXml => {
   const message = parsedXml?.message;
@@ -561,7 +561,6 @@ const parseREMSResponse = parsedXml => {
 
   const request = remsResponse.request;
   const solicitedModel = request?.solicitedmodel;
-  const questionSet = solicitedModel?.questionset;
 
   const response = remsResponse.response;
   const responseStatus = response?.responsestatus;
@@ -573,9 +572,6 @@ const parseREMSResponse = parsedXml => {
     const authNumber = approved.remsauthorizationnumber;
     const authPeriod = approved.authorizationperiod;
     const expiration = authPeriod?.expirationdate?.date;
-
-    // Parse QuestionSet to extract ETASU that were checked
-    const etasuInfo = questionSet ? parseQuestionSetToETASU(questionSet) : null;
 
     // Create summary of met requirements
     let etasuSummary = '';
@@ -619,29 +615,8 @@ const parseREMSResponse = parsedXml => {
     const reasonCode = denied.deniedreasoncode;
     const remsNote = denied.remsnote || '';
 
-    // Parse QuestionSet if present to show which ETASU failed
-    const etasuInfo = questionSet ? parseQuestionSetToETASU(questionSet) : null;
-
     // Convert to metRequirements with failure status
     let metRequirements = parseReasonCodeToRequirements(reasonCode, remsNote);
-
-    // Add QuestionSet information if available
-    if (etasuInfo && etasuInfo.questions.length > 0) {
-      const questionReqs = etasuInfo.questions.map((q, idx) => ({
-        name: q.questionText,
-        resource: {
-          status: 'pending',
-          resourceType: 'Task',
-          moduleUri: q.questionId,
-          note: [{ text: `Required: ${q.questionText}` }],
-          subject: {
-            reference: 'patient'
-          }
-        }
-      }));
-      // Prepend question-based requirements
-      metRequirements = [...questionReqs, ...metRequirements];
-    }
 
     return {
       status: 'DENIED',
