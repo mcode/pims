@@ -25,6 +25,10 @@ export const orderSchema = new mongoose.Schema({
   total: Number,
   pickupDate: String,
   dispenseStatus: String,
+  authorizationNumber: String,
+  authorizationExpiration: String,
+  denialReasonCodes: String,
+  remsNote: String,
   metRequirements: [
     {
       name: String,
