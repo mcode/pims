@@ -34,6 +34,8 @@ export type DoctorOrder = {
   total?: number;
   pickupDate?: string;
   dispenseStatus?: string;
+  denialReasonCode?: string;
+  remsNote?: string;
   metRequirements:
     | {
         name: string;
