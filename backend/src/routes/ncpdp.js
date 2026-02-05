@@ -11,8 +11,8 @@ bpx(bodyParser);
 router.use(
   bodyParser.xml({
     xmlParseOptions: {
-      normalize: true, // Trim whitespace inside text nodes
-      explicitArray: false // Only put nodes in array if >1
+      normalize: true, 
+      explicitArray: false
     }
   })
 );

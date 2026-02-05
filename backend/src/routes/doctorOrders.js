@@ -5,11 +5,14 @@ import axios from 'axios';
 // XML Parsing Middleware used for NCPDP SCRIPT
 import bodyParser from 'body-parser';
 import bpx from 'body-parser-xml';
+import { parseStringPromise } from "xml2js";
 import env from 'var';
 import {
   buildRxStatus,
   buildRxFill,
-  buildRxError
+  buildRxError,
+  buildREMSInitiationRequest,
+  buildREMSRequest
 } from '../ncpdpScriptBuilder/buildScript.v2017071.js';
 import { NewRx } from '../database/schemas/newRx.js';
 import { medicationRequestToRemsAdmins } from '../database/data.js';
@@ -17,13 +20,21 @@ import { medicationRequestToRemsAdmins } from '../database/data.js';
 bpx(bodyParser);
 router.use(
   bodyParser.xml({
+    type: ['application/xml'],
     xmlParseOptions: {
-      normalize: true, // Trim whitespace inside text nodes
-      explicitArray: false // Only put nodes in array if >1
+      normalize: true, 
+      explicitArray: false
     }
   })
 );
 router.use(bodyParser.urlencoded({ extended: false }));
+
+const XML2JS_OPTS = {
+  explicitArray: false,
+  trim: true,
+  normalize: true,
+  normalizeTags: true, // <-- makes all tag names lower case
+};
 
 /**
  * Route: 'doctorOrders/api/getRx/pending'
@@ -59,7 +70,6 @@ router.get('/api/getRx/pickedUp', async (_req, res) => {
  * Description: Process addRx / NewRx NCPDP message.
  */
 export async function processNewRx(newRxMessageConvertedToJSON) {
-  console.log('processNewRx NCPDP SCRIPT message');
   const newOrder = await parseNCPDPScript(newRxMessageConvertedToJSON);
 
   try {
@@ -84,7 +94,43 @@ export async function processNewRx(newRxMessageConvertedToJSON) {
     return buildRxError(errorStr);
   }
 
-  return buildRxStatus(newRxMessageConvertedToJSON);
+  const rxStatus = buildRxStatus(newRxMessageConvertedToJSON);
+  console.log('Returning RxStatus');
+  console.log(rxStatus);
+
+  // If REMS drug, send REMSInitiationRequest per NCPDP spec
+  if (isRemsDrug(newOrder)) {
+    console.log('REMS drug detected - sending REMSInitiationRequest per NCPDP workflow');
+    try {
+      const initiationResponse = await sendREMSInitiationRequest(newOrder);
+
+      if (initiationResponse) {
+        const updateData = {
+          remsNote: initiationResponse.remsNote
+        };
+
+        if (initiationResponse.caseNumber) {
+          updateData.caseNumber = initiationResponse.caseNumber;
+          console.log('Received REMS Case Number:', initiationResponse.caseNumber);
+        }
+
+        if (initiationResponse.remsPatientId) {
+          console.log('Received REMS Patient ID:', initiationResponse.remsPatientId);
+        }
+
+        if (initiationResponse.status === 'CLOSED') {
+          updateData.denialReasonCode = initiationResponse.reasonCode;
+          console.log('REMSInitiation CLOSED:', initiationResponse.reasonCode);
+        }
+
+        await doctorOrder.updateOne({ _id: newOrder._id }, updateData);
+        console.log('Updated order with REMSInitiation response');
+      }
+    } catch (error) {
+      console.log('Error processing REMSInitiationRequest:', error);
+    }
+  }
+  return rxStatus;
 }
 
 /**
@@ -94,6 +140,8 @@ export async function processNewRx(newRxMessageConvertedToJSON) {
 router.post('/api/addRx', async (req, res) => {
   // Parsing incoming NCPDP SCRIPT XML to doctorOrder JSON
   const newRxMessageConvertedToJSON = req.body;
+  console.log('processNewRx NCPDP SCRIPT message');
+  console.log(JSON.stringify(req.body));
   const status = await processNewRx(newRxMessageConvertedToJSON);
   res.send(status);
   console.log('Sent Status/Error');
@@ -101,28 +149,65 @@ router.post('/api/addRx', async (req, res) => {
 
 /**
  * Route: 'doctorOrders/api/updateRx/:id'
- * Description : 'Updates prescription based on mongo id, used in etasu'
+ * Description : 'Updates prescription based on mongo id, sends NCPDP REMSRequest for authorization'
  */
 router.patch('/api/updateRx/:id', async (req, res) => {
   try {
-    // Finding by id
     const order = await doctorOrder.findById(req.params.id).exec();
     console.log('Found doctor order by id! --- ', order);
 
-    const guidanceResponse = await getGuidanceResponse(order);
-    const metRequirements =
-      guidanceResponse?.contained?.[0]?.['parameter'] || order.metRequirements;
-    const dispenseStatus = getDispenseStatus(order, guidanceResponse);
+    // Non-REMS drugs auto-approve
+    if (!isRemsDrug(order)) {
+      const newOrder = await doctorOrder.findOneAndUpdate(
+        { _id: req.params.id },
+        { dispenseStatus: 'Approved' },
+        { new: true }
+      );
+      res.send(newOrder);
+      console.log('Non-REMS drug - auto-approved');
+      return;
+    }
 
-    // Saving and updating
+    // REMS drugs - send NCPDP REMSRequest per spec
+    console.log('REMS drug - sending REMSRequest for authorization per NCPDP workflow');
+    const ncpdpResponse = await sendREMSRequest(order);
+
+    if (!ncpdpResponse) {
+      res.send(order);
+      console.log('NCPDP REMSRequest failed');
+      return;
+    }
+
+    // Update based on NCPDP response
+    const updateData = {
+      dispenseStatus: getDispenseStatus(order, ncpdpResponse)
+    };
+
+    if (ncpdpResponse.status === 'APPROVED') {
+      updateData.authorizationNumber = ncpdpResponse.authorizationNumber;
+      updateData.authorizationExpiration = ncpdpResponse.authorizationExpiration;
+      updateData.caseNumber = ncpdpResponse.caseId;
+      
+      // Format approval note with ETASU summary
+      let approvalNote = `APPROVED - Authorization: ${ncpdpResponse.authorizationNumber}, Expires: ${ncpdpResponse.authorizationExpiration}`;
+      updateData.remsNote = approvalNote;
+      updateData.denialReasonCode = null;
+      console.log('APPROVED:', ncpdpResponse.authorizationNumber);
+    } else if (ncpdpResponse.status === 'DENIED') {
+      updateData.denialReasonCode = ncpdpResponse.reasonCode;
+      updateData.remsNote = ncpdpResponse.remsNote;
+      updateData.caseNumber = ncpdpResponse.caseId;
+      console.log('DENIED:', ncpdpResponse.reasonCode);
+    }
+
     const newOrder = await doctorOrder.findOneAndUpdate(
       { _id: req.params.id },
-      { dispenseStatus, metRequirements },
+      updateData,
       { new: true }
     );
 
     res.send(newOrder);
-    console.log('Updated order');
+    console.log('Updated order with NCPDP response');
   } catch (error) {
     console.log('Error', error);
     return error;
@@ -160,7 +245,7 @@ router.patch('/api/updateRx/:id/metRequirements', async (req, res) => {
 
 /**
  * Route: 'doctorOrders/api/updateRx/:id/pickedUp'
- * Description : 'Updates prescription dispense status based on mongo id to be picked up '
+ * Description : 'Updates prescription dispense status to picked up and sends RxFill per NCPDP spec'
  */
 router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
   let prescriberOrderNumber = null;
@@ -178,40 +263,60 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
     return error;
   }
 
+  // Send RxFill per NCPDP spec to BOTH EHR and REMS Admin
   try {
-    // Reach out to EHR to update dispense status as XML
     const newRx = await NewRx.findOne({
       prescriberOrderNumber: prescriberOrderNumber
     });
+    
+    if (!newRx) {
+      console.log('NewRx not found for RxFill');
+      return;
+    }
+
     const rxFill = buildRxFill(newRx);
-    const status = await axios.post(env.EHR_RXFILL_URL, rxFill, {
-      headers: {
-        Accept: 'application/xml', // Expect that the Status that the EHR returns back is in XML
-        'Content-Type': 'application/xml' // Tell the EHR that the RxFill is in XML
-      }
-    });
-    console.log('Sent RxFill to EHR and received status from EHR', status.data);
+    console.log('Sending RxFill per NCPDP workflow');
 
-    const remsAdminStatus = await axios.post(env.REMS_ADMIN_NCPDP, rxFill, {
-      headers: {
-        Accept: 'application/xml', // Expect that the Status that the rems admin returns back is in XML
-        'Content-Type': 'application/xml' // Tell the rems admin that the RxFill is in XML
-      }
-    });
+    // Send to EHR
+    try {
+      const ehrStatus = await axios.post(env.EHR_RXFILL_URL, rxFill, {
+        headers: {
+          Accept: 'application/xml',
+          'Content-Type': 'application/xml'
+        }
+      });
+      console.log('Sent RxFill to EHR, received status:', ehrStatus.data);
+    } catch (ehrError) {
+      console.log('Failed to send RxFill to EHR:', ehrError.message);
+    }
 
-    console.log('Sent RxFill to rems admin and received status from rems admin: ', remsAdminStatus);
+    // Send to REMS Admin (required by NCPDP spec for REMS drugs)
+    const order = await doctorOrder.findOne({ prescriberOrderNumber });
+    if (isRemsDrug(order)) {
+      try {
+        const remsAdminStatus = await axios.post(
+          env.REMS_ADMIN_NCPDP,
+          rxFill,
+          {
+            headers: {
+              Accept: 'application/xml',
+              'Content-Type': 'application/xml'
+            }
+          }
+        );
+        console.log('Sent RxFill to REMS Admin, received status:', remsAdminStatus.data);
+      } catch (remsError) {
+        console.log('Failed to send RxFill to REMS Admin:', remsError.message);
+      }
+    }
   } catch (error) {
-    console.log('Could not send RxFill to EHR', error);
-    return error;
+    console.log('Error in RxFill workflow:', error);
   }
 });
 
 /**
  * Route : 'doctorOrders/api/getRx/patient/:patientName/drug/:simpleDrugName`
  * Description : 'Fetches first available doctor order based on patientFirstName, patientLastName and patientDOB'
- *     'To retrieve a specific one for a drug on a given date, supply the drugNdcCode and rxDate in the query parameters'
- *     'Required Parameters : patientFirstName, patientLastName patientDOB are part of the path'
- *     'Optional Parameters : all remaining values in the orderSchema as query parameters (?drugNdcCode=0245-0571-01,rxDate=2020-07-11)'
  */
 router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (req, res) => {
   var searchDict = {
@@ -221,11 +326,8 @@ router.get('/api/getRx/:patientFirstName/:patientLastName/:patientDOB', async (r
   };
 
   if (req.query && Object.keys(req.query).length > 0) {
-    // add the query parameters
     for (const prop in req.query) {
-      // verify that the parameter is in the orderSchema
       if (orderSchema.path(prop) != undefined) {
-        // add the parameters to the search query
         searchDict[prop] = req.query[prop];
       }
     }
@@ -249,6 +351,7 @@ router.delete('/api/deleteAll', async (req, res) => {
 });
 
 const isRemsDrug = order => {
+  console.log(order);
   return medicationRequestToRemsAdmins.some(entry => {
     if (order.drugNdcCode && entry.ndc) {
       return order.drugNdcCode === entry.ndc;
@@ -262,6 +365,11 @@ const isRemsDrug = order => {
   });
 };
 
+
+/**
+ * Get FHIR ETASU URL for the order
+ * Used for GuidanceResponse calls (View ETASU)
+ */
 const getEtasuUrl = order => {
   let baseUrl;
 
@@ -286,6 +394,10 @@ const getEtasuUrl = order => {
   return baseUrl ? etasuUrl : null;
 };
 
+/**
+ * Get FHIR GuidanceResponse for ETASU requirements
+ * Used by View ETASU button
+ */
 const getGuidanceResponse = async order => {
   const etasuUrl = getEtasuUrl(order);
 
@@ -368,31 +480,247 @@ const getGuidanceResponse = async order => {
     };
   }
 
-  const response = await axios.post(etasuUrl, body, {
-    headers: {
-      'content-type': 'application/json'
-    }
-  });
-  console.log('Retrieved order', JSON.stringify(response.data, null, 4));
-  console.log('URL', etasuUrl);
-  const responseResource = response.data.parameter?.[0]?.resource;
-  return responseResource;
+  try {
+    const response = await axios.post(etasuUrl, body, {
+      headers: {
+        'content-type': 'application/json'
+      }
+    });
+    console.log('Retrieved FHIR GuidanceResponse', JSON.stringify(response.data, null, 4));
+    console.log('URL', etasuUrl);
+    const responseResource = response.data.parameter?.[0]?.resource;
+    return responseResource;
+  } catch (error) {
+    console.log('Error fetching FHIR GuidanceResponse:', error.message);
+    return null;
+  }
 };
 
-const getDispenseStatus = (order, guidanceResponse) => {
-  const isNotRemsDrug = !guidanceResponse;
-  const isRemsDrugAndMetEtasu = guidanceResponse?.status === 'success';
-  const isPickedUp = order.dispenseStatus === 'Picked Up';
-  if (isNotRemsDrug && order.dispenseStatus === 'Pending') return 'Approved';
-  if (isRemsDrugAndMetEtasu) return 'Approved';
-  if (isPickedUp) return 'Picked Up';
+/**
+ * Send NCPDP REMSInitiationRequest to REMS Admin
+ * Per NCPDP spec: Sent when prescription arrives to check REMS case status
+ */
+const sendREMSInitiationRequest = async order => {
+  try {
+    const newRx = await NewRx.findOne({
+      prescriberOrderNumber: order.prescriberOrderNumber
+    });
+
+    if (!newRx) {
+      console.log('NewRx not found for REMSInitiationRequest');
+      return null;
+    }
+
+    const initiationRequest = buildREMSInitiationRequest(newRx);
+    console.log('Sending REMSInitiationRequest to REMS Admin');
+
+    console.log(initiationRequest)
+
+    const response = await axios.post(
+      env.REMS_ADMIN_NCPDP,
+      initiationRequest,
+      {
+        headers: {
+          Accept: 'application/xml',
+          'Content-Type': 'application/xml'
+        }
+      }
+    );
+
+    const parsedResponse = await parseStringPromise(response.data, XML2JS_OPTS);
+
+    console.log('Received REMSInitiationResponse');    
+    console.log('Response:', response.data);
+
+    return parseREMSInitiationResponse(parsedResponse);
+  } catch (error) {
+    console.log('Error sending REMSInitiationRequest:', error.message);
+    return null;
+  }
+};
+
+/**
+ * Send NCPDP REMSRequest to REMS Admin for authorization
+ * Per NCPDP spec: Sent at pickup time for authorization check
+ */
+const sendREMSRequest = async order => {
+  try {
+    const newRx = await NewRx.findOne({
+      prescriberOrderNumber: order.prescriberOrderNumber
+    });
+
+    if (!newRx) {
+      console.log('NewRx not found for REMSRequest');
+      return null;
+    }
+
+    if (!order.caseNumber) {
+      console.log('No case number - need REMSInitiationRequest first');
+      return null;
+    }
+
+    const remsRequest = buildREMSRequest(newRx, order.caseNumber);
+    console.log('Sending REMSRequest to REMS Admin for case:', order.caseNumber);
+    console.log(remsRequest)
+
+    const response = await axios.post(
+      env.REMS_ADMIN_NCPDP,
+      remsRequest,
+      {
+        headers: {
+          Accept: 'application/xml',
+          'Content-Type': 'application/xml'
+        }
+      }
+    );
+
+    const parsedResponse = await parseStringPromise(response.data, XML2JS_OPTS);
+
+    console.log('Received REMSResponse');
+    console.log('Response:', response.data);
+    return parseREMSResponse(parsedResponse);
+  } catch (error) {
+    console.log('Error sending REMSRequest:', error.message);
+    return null;
+  }
+};
+
+/**
+ * Parse NCPDP REMSInitiationResponse per spec
+ * Extracts case info, status, and requirements
+ */
+const parseREMSInitiationResponse = parsedXml => {
+  const message = parsedXml?.message;
+  const body = message?.body;
+  const initResponse = body?.remsinitiationresponse;
+  console.log(message);
+  console.log(initResponse);
+
+  if (!initResponse) {
+    console.log('No REMSInitiationResponse found');
+    return null;
+  }
+
+  const response = initResponse.response;
+  const responseStatus = response?.responsestatus;
+
+  // Check for Closed status (requirements not met)
+  const closed = responseStatus?.closed;
+  if (closed) {
+    const reasonCode = closed.reasoncode;
+    const remsNote = closed.remsnote || '';
+
+    return {
+      status: 'CLOSED',
+      reasonCode: reasonCode,
+      remsNote: remsNote,
+    };
+  }
+
+  // Extract case ID and patient ID from successful initiation
+  const patient = initResponse.patient;
+  const humanPatient = patient?.humanpatient;
+  const identification = humanPatient?.identification;
+  const remsPatientId = identification?.remspatientid;
+
+  // Check if there's a case number in the response
+  let caseNumber = null;
+  const medication = initResponse.medicationprescribed;
+  if (medication) {
+    // Some implementations include case number in initiation success
+    caseNumber = remsPatientId; // Often the case number is returned as patient ID
+  }
+
+  return {
+    status: 'OPEN',
+    remsPatientId: remsPatientId,
+    caseNumber: caseNumber,
+  };
+};
+
+/**
+ * Parse NCPDP REMSResponse per spec
+ * Extracts authorization status, case ID, and NCPDP rejection code
+ */
+const parseREMSResponse = parsedXml => {
+  const message = parsedXml?.message;
+  const body = message?.body;
+  const remsResponse = body?.remsresponse;
+  console.log(message);
+  console.log(remsResponse);
+
+  if (!remsResponse) {
+    console.log('No REMSResponse found');
+    return null;
+  }
+
+  const request = remsResponse.request;
+
+  const response = remsResponse.response;
+  const responseStatus = response?.responsestatus;
+
+  // Check for APPROVED status
+  const approved = responseStatus?.approved;
+  if (approved) {
+    const caseId = approved.remscaseid;
+    const authNumber = approved.remsauthorizationnumber;
+    const authPeriod = approved.authorizationperiod;
+    const expiration = authPeriod?.expirationdate?.date;
+
+    return {
+      status: 'APPROVED',
+      caseId: caseId,
+      authorizationNumber: authNumber,
+      authorizationExpiration: expiration,
+      remsNote: 'All REMS requirements have been met and verified. Authorization granted for dispensing.',
+    };
+  }
+
+  // Check for DENIED status
+  const denied = responseStatus?.denied;
+  if (denied) {
+    const caseId = denied.remscaseid;
+    const reasonCode = denied.deniedreasoncode;
+    const remsNote = denied.remsnote || '';
+
+ 
+
+    return {
+      status: 'DENIED',
+      caseId: caseId,
+      reasonCode: reasonCode,
+      remsNote: remsNote,
+    };
+  }
+
+  return null;
+};
+
+/**
+ * Determine dispense status based on NCPDP response
+ */
+const getDispenseStatus = (order, ncpdpResponse) => {
+  // Non-REMS drugs auto-approve
+  if (!ncpdpResponse) {
+    if (order.dispenseStatus === 'Pending') return 'Approved';
+    if (order.dispenseStatus === 'Picked Up') return 'Picked Up';
+    return order.dispenseStatus;
+  }
+
+  // REMS drugs - check NCPDP response per spec
+  if (ncpdpResponse.status === 'APPROVED') {
+    return 'Approved';
+  }
+
+  if (order.dispenseStatus === 'Picked Up') {
+    return 'Picked Up';
+  }
+
   return 'Pending';
 };
 
 /**
- * Description : 'Returns parsed NCPDP NewRx as JSON'
- * In : NCPDP SCRIPT XML <NewRx>
- * Return : Mongoose schema of a newOrder
+ * Parse NCPDP SCRIPT NewRx to order format
  */
 async function parseNCPDPScript(newRx) {
   // Parsing XML NCPDP SCRIPT from EHR
@@ -401,7 +729,7 @@ async function parseNCPDPScript(newRx) {
   const medicationPrescribed = newRx.Message.Body.NewRx.MedicationPrescribed;
 
   const incompleteOrder = {
-    orderId: newRx.Message.Header.MessageID.toString(), // Will need to return to this and use actual pt identifier or uuid
+    orderId: newRx.Message.Header.MessageID.toString(),
     caseNumber: newRx.Message.Header.AuthorizationNumber,
     prescriberOrderNumber: newRx.Message.Header.PrescriberOrderNumber,
     patientName: patient.HumanPatient.Name.FirstName + ' ' + patient.HumanPatient.Name.LastName,
@@ -424,17 +752,15 @@ async function parseNCPDPScript(newRx) {
     simpleDrugName: medicationPrescribed.DrugDescription?.split(' ')[0],
 
     drugNdcCode:
-      medicationPrescribed.DrugCoded.ProductCode?.Code ||
-      medicationPrescribed.DrugCoded.NDC ||
-      null,
+      medicationPrescribed.DrugCoded.ProductCode?.Code || medicationPrescribed.DrugCoded.NDC || null,
 
     drugRxnormCode: medicationPrescribed.DrugCoded.DrugDBCode?.Code || null,
 
     rxDate: medicationPrescribed.WrittenDate.Date,
-    drugPrice: 200, // Add later?
+    drugPrice: 200,
     quantities: medicationPrescribed.Quantity.Value,
     total: 1800,
-    pickupDate: 'Tue Dec 13 2022', // Add later?
+    pickupDate: 'Tue Dec 13 2022',
     dispenseStatus: 'Pending'
   };
 
