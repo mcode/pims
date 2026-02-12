@@ -284,7 +284,7 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
       // Send to intermediary - it will forward to both EHR and REMS Admin
       const endpoint = getRxFillEndpoint();
       console.log(`Sending RxFill to intermediary: ${endpoint}`);
-      await axios.post(endpoint, rxFillStr, {
+      await axios.post(endpoint, rxFill, {
         headers: { 'Content-Type': 'application/xml' }
       });
     } else {
