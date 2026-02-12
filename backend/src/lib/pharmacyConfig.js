@@ -1,7 +1,7 @@
 
 // Configuration state
 let config = {
-  useIntermediary: true,
+  useIntermediary: process.env.USE_INTERMEDIARY || true,
   intermediaryUrl: process.env.INTERMEDIARY_URL || 'http://localhost:3003',
   remsAdminUrl: process.env.REMS_ADMIN_NCPDP || 'http://localhost:8090',
   ehrUrl: process.env.EHR_NCPDP_URL || 'http://localhost:8080/ncpdp/script'
