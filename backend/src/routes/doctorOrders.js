@@ -16,6 +16,7 @@ import {
 } from '../ncpdpScriptBuilder/buildScript.v2017071.js';
 import { NewRx } from '../database/schemas/newRx.js';
 import { medicationRequestToRemsAdmins } from '../database/data.js';
+import { getConfig, updateConfig, getNCPDPEndpoint, getETASUEndpoint, getRxFillEndpoint } from '../lib/pharmacyConfig.js';
 
 bpx(bodyParser);
 router.use(
@@ -276,37 +277,48 @@ router.patch('/api/updateRx/:id/pickedUp', async (req, res) => {
 
     const rxFill = buildRxFill(newRx);
     console.log('Sending RxFill per NCPDP workflow');
+      
+    const config = getConfig();
 
-    // Send to EHR
-    try {
-      const ehrStatus = await axios.post(env.EHR_RXFILL_URL, rxFill, {
-        headers: {
-          Accept: 'application/xml',
-          'Content-Type': 'application/xml'
-        }
+    if (config.useIntermediary) {
+      // Send to intermediary - it will forward to both EHR and REMS Admin
+      const endpoint = getRxFillEndpoint();
+      console.log(`Sending RxFill to intermediary: ${endpoint}`);
+      await axios.post(endpoint, rxFillStr, {
+        headers: { 'Content-Type': 'application/xml' }
       });
-      console.log('Sent RxFill to EHR, received status:', ehrStatus.data);
-    } catch (ehrError) {
-      console.log('Failed to send RxFill to EHR:', ehrError.message);
-    }
-
-    // Send to REMS Admin (required by NCPDP spec for REMS drugs)
-    const order = await doctorOrder.findOne({ prescriberOrderNumber });
-    if (isRemsDrug(order)) {
+    } else {
+      // Send to EHR
       try {
-        const remsAdminStatus = await axios.post(
-          env.REMS_ADMIN_NCPDP,
-          rxFill,
-          {
-            headers: {
-              Accept: 'application/xml',
-              'Content-Type': 'application/xml'
-            }
+        const ehrStatus = await axios.post(env.EHR_RXFILL_URL, rxFill, {
+          headers: {
+            Accept: 'application/xml',
+            'Content-Type': 'application/xml'
           }
-        );
-        console.log('Sent RxFill to REMS Admin, received status:', remsAdminStatus.data);
-      } catch (remsError) {
-        console.log('Failed to send RxFill to REMS Admin:', remsError.message);
+        });
+        console.log('Sent RxFill to EHR, received status:', ehrStatus.data);
+      } catch (ehrError) {
+        console.log('Failed to send RxFill to EHR:', ehrError.message);
+      }
+
+      // Send to REMS Admin (required by NCPDP spec for REMS drugs)
+      const order = await doctorOrder.findOne({ prescriberOrderNumber });
+      if (isRemsDrug(order)) {
+        try {
+          const remsAdminStatus = await axios.post(
+            env.REMS_ADMIN_NCPDP,
+            rxFill,
+            {
+              headers: {
+                Accept: 'application/xml',
+                'Content-Type': 'application/xml'
+              }
+            }
+          );
+          console.log('Sent RxFill to REMS Admin, received status:', remsAdminStatus.data);
+        } catch (remsError) {
+          console.log('Failed to send RxFill to REMS Admin:', remsError.message);
+        }
       }
     }
   } catch (error) {
@@ -482,7 +494,7 @@ const getGuidanceResponse = async order => {
 
   try {
     const response = await axios.post(etasuUrl, body, {
-      headers: {
+        headers: {
         'content-type': 'application/json'
       }
     });
@@ -516,8 +528,11 @@ const sendREMSInitiationRequest = async order => {
 
     console.log(initiationRequest)
 
+    const endpoint = getNCPDPEndpoint();
+    console.log(`Sending REMSInitiationRequest to: ${endpoint}`);
+    
     const response = await axios.post(
-      env.REMS_ADMIN_NCPDP,
+      endpoint,
       initiationRequest,
       {
         headers: {
@@ -526,6 +541,7 @@ const sendREMSInitiationRequest = async order => {
         }
       }
     );
+
 
     const parsedResponse = await parseStringPromise(response.data, XML2JS_OPTS);
 
@@ -563,8 +579,11 @@ const sendREMSRequest = async order => {
     console.log('Sending REMSRequest to REMS Admin for case:', order.caseNumber);
     console.log(remsRequest)
 
+    const endpoint = getNCPDPEndpoint();
+    console.log(`Sending REMSRequest to: ${endpoint}`);
+    
     const response = await axios.post(
-      env.REMS_ADMIN_NCPDP,
+      endpoint,
       remsRequest,
       {
         headers: {
@@ -773,5 +792,26 @@ async function parseNCPDPScript(newRx) {
   const order = new doctorOrder({ ...incompleteOrder, metRequirements });
   return order;
 }
+
+/**
+ * Route: 'doctorOrders/api/config'
+ * Description: 'Get current pharmacy configuration'
+ */
+router.get('/api/config', async (_req, res) => {
+  const config = getConfig();
+  console.log('Returning configuration:', config);
+  res.json(config);
+});
+
+/**
+ * Route: 'doctorOrders/api/config'
+ * Description: 'Update pharmacy configuration'
+ */
+router.post('/api/config', async (req, res) => {
+  const newConfig = updateConfig(req.body);
+  console.log('Configuration updated:', newConfig);
+  res.json(newConfig);
+});
+
 
 export default router;

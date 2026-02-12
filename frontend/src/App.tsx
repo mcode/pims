@@ -8,6 +8,7 @@ import DoctorOrders from './views/DoctorOrders/DoctorOrders';
 import Login from './views/Login/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
+import ConfigToggle from './components/ConfigToggle';
 import axios from 'axios';
 
 axios.defaults.baseURL = process.env.REACT_APP_PIMS_BACKEND_URL
@@ -38,6 +39,7 @@ function App() {
                   <Link className="NavButtons" to="/Login">
                     <Button variant="contained">Login</Button>
                   </Link>
+                  <ConfigToggle />
                 </div>
               </div>
             </Container>
