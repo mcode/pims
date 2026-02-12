@@ -19,6 +19,43 @@ The backend consists of multiple HTTP GET, POST, PATCH, or DELETE routes, most o
 
 The frontend displays pending, approved, and picked up proprietary doctor orders at [http://localhost:5050/DoctorOrders](http://localhost:5050/DoctorOrders). While there is a login page at [http://localhost:5050](http://localhost:5050) for a dummy user, there is no user authentication or authorization system.
 
+## Environment Variables
+
+The PIMS system uses environment variables to configure both the frontend and backend services.
+
+### Frontend Environment Variables
+
+The frontend environment variables are configured in `frontend/.env`:
+
+| Variable Name | Default Value | Description |
+| ------------- | ------------- | ----------- |
+| PORT | `5050` | The port that the frontend server runs on. Change if there are conflicts with port usage. |
+| REACT_APP_PIMS_BACKEND_PORT | `5051` | The port that the backend server runs on. Must match the backend's `BACKEND_PORT` setting. |
+
+To override defaults, either:
+- Start the app with environment variables: `PORT=5050 npm start`
+- Create a `frontend/.env.local` file with the desired values
+
+### Backend Environment Variables
+
+The backend environment variables are configured in `backend/env.json`:
+
+| Variable Name | Default Value | Description |
+| ------------- | ------------- | ----------- |
+| BACKEND_PORT | `5051` | The port that the backend server runs on. Change if there are conflicts with port usage. |
+| ALLOWED_ORIGIN | `*` | CORS allowed origins. Specify domains that are allowed to access the backend API. |
+| MONGO_USERNAME | `pims-user` | Username for MongoDB authentication. Should match the user created during MongoDB setup. |
+| MONGO_PASSWORD | `pims-pass` | Password for MongoDB authentication. Should match the password created during MongoDB setup. |
+| MONGO_URL | `mongodb://localhost:27017/pims` | MongoDB connection URL. Update if using a different host, port, or database name. |
+| AUTH_SOURCE | `pims` | MongoDB authentication source database name. |
+| HTTPS_KEY_PATH | `server.key` | Path to the HTTPS private key file. Required only if `USE_HTTPS` is true. |
+| HTTPS_CERT_PATH | `server.cert` | Path to the HTTPS certificate file. Required only if `USE_HTTPS` is true. |
+| USE_HTTPS | `false` | Set to `true` to enable HTTPS. Ensure valid certificate and key paths are configured. |
+| EHR_RXFILL_URL | `http://localhost:8080/test-ehr/ncpdp/script` | URL endpoint for sending RxFill messages to the EHR system. |
+| USE_INTERMEDIARY | `true` | Set to `true` to route ETASU checks through the REMS intermediary instead of directly to REMS admin. |
+| INTERMEDIARY_FHIR_URL | `http://localhost:3003/4_0_0` | Base URL of the REMS intermediary FHIR server. Used when `USE_INTERMEDIARY` is true. |
+| REMS_ADMIN_NCPDP | `http://localhost:8090/ncpdp/script` | URL endpoint for sending NCPDP Script messages directly to REMS admin. |
+
 ## Setup
 
 For an initial setup run `npm install` in both the frontend and backend subdirectories. This will install the dependencies required for each of the services.
