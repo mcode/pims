@@ -1,11 +1,12 @@
 
 // Configuration state
 let config = {
-  useIntermediary: false,
+  useIntermediary: true,
   intermediaryUrl: process.env.INTERMEDIARY_URL || 'http://localhost:3003',
-  remsAdminUrl: process.env.REMS_ADMIN_NCPDP || 'http://localhost:8090/ncpdp',
+  remsAdminUrl: process.env.REMS_ADMIN_NCPDP || 'http://localhost:8090',
   ehrUrl: process.env.EHR_NCPDP_URL || 'http://localhost:8080/ncpdp/script'
 };
+
 
 
 export function getConfig() {
@@ -24,7 +25,7 @@ export function updateConfig(newConfig) {
  */
 export function getNCPDPEndpoint() {
   if (config.useIntermediary) {
-    return `${config.intermediaryUrl}/script`;
+    return `${config.intermediaryUrl}/ncpdp/script`;
   }
   return config.remsAdminUrl;
 }
@@ -49,7 +50,7 @@ export function getETASUEndpoint() {
 export function getRxFillEndpoint() {
   if (config.useIntermediary) {
     // Intermediary handles forwarding to both EHR and REMS Admin
-    return `${config.intermediaryUrl}/script`;
+    return `${config.intermediaryUrl}/ncpdp/script`;
   }
   return config.ehrUrl;
 }
