@@ -55,6 +55,8 @@ The backend environment variables are configured in `backend/env.json`:
 | USE_INTERMEDIARY | `true` | Set to `true` to route ETASU checks through the REMS intermediary instead of directly to REMS admin. |
 | INTERMEDIARY_FHIR_URL | `http://localhost:3003/4_0_0` | Base URL of the REMS intermediary FHIR server. Used when `USE_INTERMEDIARY` is true. |
 | REMS_ADMIN_NCPDP | `http://localhost:8090/ncpdp/script` | URL endpoint for sending NCPDP Script messages directly to REMS admin. |
+| INTERMEDIARY_URL | `http://localhost:3003` | Base URL of the REMS intermediary. Used when `USE_INTERMEDIARY` is true to route NCPDP Script and RxFill messages. |
+| EHR_NCPDP_URL | `http://localhost:8080/ncpdp/script` | URL endpoint for sending NCPDP Script messages directly to the EHR system. Used when `USE_INTERMEDIARY` is false. |
 
 ## Setup
 
@@ -120,4 +122,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
