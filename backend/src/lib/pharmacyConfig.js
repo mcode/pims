@@ -1,9 +1,11 @@
-// Configuration state 
+import env from 'var';
+
+// Configuration state
 let config = {
-  useIntermediary: process.env.USE_INTERMEDIARY === 'true',
-  intermediaryUrl: process.env.INTERMEDIARY_URL || '',
-  remsAdminUrl: process.env.REMS_ADMIN_NCPDP || '',
-  ehrUrl: process.env.EHR_NCPDP_URL || ''
+  useIntermediary: env.USE_INTERMEDIARY,
+  intermediaryUrl: env.INTERMEDIARY_URL,
+  remsAdminUrl: env.REMS_ADMIN_NCPDP,
+  ehrUrl: env.EHR_NCPDP_URL
 };
 
 export function getConfig() {
