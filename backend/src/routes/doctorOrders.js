@@ -385,7 +385,7 @@ const isRemsDrug = order => {
 const getEtasuUrl = order => {
   let baseUrl;
 
-  if (env.USE_INTERMEDIARY) {
+  if (getConfig().useIntermediary) {
     baseUrl = env.INTERMEDIARY_FHIR_URL;
   } else {
     const remsDrug = medicationRequestToRemsAdmins.find(entry => {
@@ -419,7 +419,7 @@ const getGuidanceResponse = async order => {
 
   // Make the etasu call with the case number if it exists, if not call with patient and medication
   let body = {};
-  if (order.caseNumber && !env.USE_INTERMEDIARY) {
+  if (order.caseNumber && !getConfig().useIntermediary) {
     body = {
       resourceType: 'Parameters',
       parameter: [
