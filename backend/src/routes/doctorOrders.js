@@ -5,7 +5,7 @@ import axios from 'axios';
 // XML Parsing Middleware used for NCPDP SCRIPT
 import bodyParser from 'body-parser';
 import bpx from 'body-parser-xml';
-import { parseStringPromise } from "xml2js";
+import { parseStringPromise } from 'xml2js';
 import env from 'var';
 import {
   buildRxStatus,
@@ -16,7 +16,7 @@ import {
 } from '../ncpdpScriptBuilder/buildScript.v2017071.js';
 import { NewRx } from '../database/schemas/newRx.js';
 import { medicationRequestToRemsAdmins } from '../database/data.js';
-import { getConfig, updateConfig, getNCPDPEndpoint, getETASUEndpoint, getRxFillEndpoint } from '../lib/pharmacyConfig.js';
+import { getConfig, updateConfig, getNCPDPEndpoint, getRxFillEndpoint } from '../lib/pharmacyConfig.js';
 
 bpx(bodyParser);
 router.use(
@@ -569,7 +569,7 @@ const sendREMSInitiationRequest = async order => {
     const initiationRequest = buildREMSInitiationRequest(newRx);
     console.log('Sending REMSInitiationRequest to REMS Admin');
 
-    console.log(initiationRequest)
+    console.log(initiationRequest);
 
     const endpoint = getNCPDPEndpoint();
     console.log(`Sending REMSInitiationRequest to: ${endpoint}`);
@@ -620,7 +620,7 @@ const sendREMSRequest = async order => {
 
     const remsRequest = buildREMSRequest(newRx, order.caseNumber);
     console.log('Sending REMSRequest to REMS Admin for case:', order.caseNumber);
-    console.log(remsRequest)
+    console.log(remsRequest);
 
     const endpoint = getNCPDPEndpoint();
     console.log(`Sending REMSRequest to: ${endpoint}`);
@@ -715,8 +715,6 @@ const parseREMSResponse = parsedXml => {
     console.log('No REMSResponse found');
     return null;
   }
-
-  const request = remsResponse.request;
 
   const response = remsResponse.response;
   const responseStatus = response?.responsestatus;
