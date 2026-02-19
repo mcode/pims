@@ -9,7 +9,6 @@ import env from 'var';
 import https from 'https';
 import fs from 'fs';
 
-//middleware and configurations
 import bodyParser from 'body-parser';
 
 main().catch(err => console.log(err));
@@ -23,6 +22,7 @@ async function main() {
 
   console.log('CORS OPTIONS: ' + JSON.stringify(options));
 
+  app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cors(options));
   app.use('/doctorOrders', doctorOrders);

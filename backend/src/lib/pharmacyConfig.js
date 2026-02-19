@@ -1,13 +1,10 @@
-
-// Configuration state
+// Configuration state 
 let config = {
-  useIntermediary: process.env.USE_INTERMEDIARY,
-  intermediaryUrl: process.env.INTERMEDIARY_URL,
-  remsAdminUrl: process.env.REMS_ADMIN_NCPDP,
-  ehrUrl: process.env.EHR_NCPDP_URL
+  useIntermediary: process.env.USE_INTERMEDIARY === 'true',
+  intermediaryUrl: process.env.INTERMEDIARY_URL || '',
+  remsAdminUrl: process.env.REMS_ADMIN_NCPDP || '',
+  ehrUrl: process.env.EHR_NCPDP_URL || ''
 };
-
-
 
 export function getConfig() {
   return { ...config };
@@ -15,7 +12,14 @@ export function getConfig() {
 
 
 export function updateConfig(newConfig) {
-  config = { ...config, ...newConfig };
+  const sanitized = { ...newConfig };
+
+  if ('useIntermediary' in sanitized) {
+    const val = sanitized.useIntermediary;
+    sanitized.useIntermediary = val === true || val === 'true';
+  }
+
+  config = { ...config, ...sanitized };
   console.log('Configuration updated:', config);
   return { ...config };
 }
