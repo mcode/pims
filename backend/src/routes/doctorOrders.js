@@ -5,7 +5,7 @@ import axios from 'axios';
 // XML Parsing Middleware used for NCPDP SCRIPT
 import bodyParser from 'body-parser';
 import bpx from 'body-parser-xml';
-import { parseStringPromise } from "xml2js";
+import { parseStringPromise } from 'xml2js';
 import env from 'var';
 import {
   buildRxStatus,
