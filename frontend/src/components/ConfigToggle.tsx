@@ -1,19 +1,30 @@
-import { IconButton, Menu, MenuItem, Switch, Typography, Box, Divider } from '@mui/material';
+import { IconButton, Menu, MenuItem, Switch, Typography, Box, Divider, TextField, Button } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
+interface PharmacyConfig {
+  useIntermediary: boolean;
+  intermediaryUrl: string;
+  remsAdminUrl: string;
+  ehrUrl: string;
+}
+
 export default function ConfigToggle() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [useIntermediary, setUseIntermediary] = useState(false);
+  const [config, setConfig] = useState<PharmacyConfig>({
+    useIntermediary: false,
+    intermediaryUrl: '',
+    remsAdminUrl: '',
+    ehrUrl: '',
+  });
   const open = Boolean(anchorEl);
 
-  // Load config on mount
+  // Load config from backend on mount
   useEffect(() => {
-    const saved = localStorage.getItem('useIntermediary');
-    if (saved !== null) {
-      setUseIntermediary(saved === 'true');
-    }
+    axios.get<PharmacyConfig>('/doctorOrders/api/config')
+      .then(({ data }) => setConfig(data))
+      .catch(() => console.error('Failed to load config'));
   }, []);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -24,15 +35,15 @@ export default function ConfigToggle() {
     setAnchorEl(null);
   };
 
-  const handleToggle = async () => {
-    const newValue = !useIntermediary;
-    setUseIntermediary(newValue);
-    localStorage.setItem('useIntermediary', String(newValue));
+  const handleToggle = () => {
+    setConfig(prev => ({ ...prev, useIntermediary: !prev.useIntermediary }));
+  };
 
-    // Update backend
+  const handleSave = async () => {
     try {
-      await axios.post('/doctorOrders/api/config', { useIntermediary: newValue });
-      console.log('Configuration updated:', newValue ? 'Using Intermediary' : 'Direct Connection');
+      await axios.post('/doctorOrders/api/config', config);
+      console.log('Configuration updated:', config);
+      handleClose();
     } catch (error) {
       console.error('Failed to update backend config:', error);
     }
@@ -55,7 +66,7 @@ export default function ConfigToggle() {
         open={open}
         onClose={handleClose}
         PaperProps={{
-          sx: { minWidth: 280, p: 1 }
+          sx: { minWidth: 300, p: 1 }
         }}
       >
         <Box sx={{ px: 2, py: 1 }}>
@@ -66,19 +77,44 @@ export default function ConfigToggle() {
         <Divider />
         <MenuItem onClick={handleToggle} sx={{ py: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-            <Switch checked={useIntermediary} size="small" />
+            <Switch checked={config.useIntermediary} size="small" />
             <Box>
               <Typography variant="body2" fontWeight="medium">
                 Use Intermediary
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {useIntermediary
-                  ? 'Routing via intermediary'
-                  : 'Direct to REMS Admin'}
+                {config.useIntermediary ? 'Routing via intermediary' : 'Direct to REMS Admin'}
               </Typography>
             </Box>
           </Box>
         </MenuItem>
+        <Divider />
+        <Box sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <TextField
+            label="Intermediary URL"
+            size="small"
+            fullWidth
+            value={config.intermediaryUrl}
+            onChange={e => setConfig(prev => ({ ...prev, intermediaryUrl: e.target.value }))}
+          />
+          <TextField
+            label="REMS Admin URL"
+            size="small"
+            fullWidth
+            value={config.remsAdminUrl}
+            onChange={e => setConfig(prev => ({ ...prev, remsAdminUrl: e.target.value }))}
+          />
+          <TextField
+            label="EHR URL"
+            size="small"
+            fullWidth
+            value={config.ehrUrl}
+            onChange={e => setConfig(prev => ({ ...prev, ehrUrl: e.target.value }))}
+          />
+          <Button variant="contained" size="small" onClick={handleSave} sx={{ alignSelf: 'flex-end' }}>
+            Save
+          </Button>
+        </Box>
       </Menu>
     </>
   );
