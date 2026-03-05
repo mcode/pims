@@ -3,7 +3,6 @@ import { XMLBuilder } from 'fast-xml-parser';
 import { v4 as uuidv4 } from 'uuid';
 
 const MOCK_VALUE = 'MOCK_VALUE';
-const PICKED_UP = 'Picked up';
 
 const XML_BUILDER_OPTIONS = {
   ignoreAttributes: false,
@@ -97,10 +96,10 @@ export function buildRxError(newRxMessageConvertedToJSON, errorMessage) {
  * Per NCPDP spec: Sent when medication is dispensed/picked up
  * Must be sent to both EHR and REMS Admin for REMS drugs
  */
-export const buildRxFill = newRx => {
+export const buildRxFill = (newRx, toEhr, dispensed, note) => {
   const { Message } = JSON.parse(newRx.serializedJSON);
   const { Header, Body } = Message;
-  console.log('Building RxFill per NCPDP SCRIPT');
+  console.log('Building RxFill per NCPDP SCRIPT, ' + (toEhr ? 'To: EHR' : 'To: REMS') + ', dispensed: ' + dispensed + ', note: ' + note);
   const time = new Date();
 
   // Extract medication data from NewRx
@@ -145,8 +144,8 @@ export const buildRxFill = newRx => {
       Header: [
         {
           To: {
-            '#text': Header.From._,
-            '@@Qualifier': Header.From.$.Qualifier
+            '#text': (toEhr ? Header.From._: 'REMS Administrator'),
+            '@@Qualifier': (toEhr ? Header.From.$.Qualifier : 'REMS')
           }
         },
         {
@@ -164,11 +163,9 @@ export const buildRxFill = newRx => {
       Body: [
         {
           RxFill: {
-            FillStatus: {
-              Dispensed: {
-                Note: PICKED_UP
-              }
-            },
+            FillStatus: 
+              dispensed ? { Dispensed: { Note: note }} : { NotDispensed: { Note: note }}
+            ,
             Patient: Body.NewRx.Patient,
             Pharmacy: {
               Identification: {
@@ -235,13 +232,13 @@ export const buildREMSInitiationRequest = newRx => {
         {
           To: {
             '#text': ndcCode,
-            '@@Qualifier': 'ZZZ'
+            '@@Qualifier': 'REMS'
           }
         },
         {
           From: {
             '#text': Header.To._ || 'PIMS Pharmacy',
-            '@@Qualifier': 'REMS'
+            '@@Qualifier': 'P'
           }
         },
         { MessageID: uuidv4() },
@@ -318,13 +315,13 @@ export const buildREMSRequest = (newRx, caseNumber) => {
         {
           To: {
             '#text': ndcCode,
-            '@@Qualifier': 'ZZZ'
+            '@@Qualifier': 'REMS'
           }
         },
         {
           From: {
             '#text': Header.To._ || 'PIMS Pharmacy',
-            '@@Qualifier': 'REMS'
+            '@@Qualifier': 'P'
           }
         },
         { MessageID: uuidv4() },
