@@ -14,6 +14,8 @@ The backend consists of multiple HTTP GET, POST, PATCH, or DELETE routes, most o
 - `/api/updateRx/:id/metRequirements` is called by the PIMS frontend to display a list of fulfilled and unfulfilled Elements to Assure Safe Use (ETASU).
 - `/api/updateRx/:id/pickedUp` is called by the PIMS frontend to update a doctor order's dispense status to "picked up" and POST an NCPDP Script 2017071 RxFill created from the stored NCPDP Script 2017071 NewRx to the test-ehr to update the associated FHIR R4 MedicationDispense.
 - `/api/deleteAll` is called by the PIMS frontend and request-generator via DELETE to delete all doctor orders (for development purposes).
+- `/ncpdp/script` is the NCPDP ingress for both SCRIPT XML and Pharmacy Product Availability Pilot 2.0 JSON requests. The route detects PPA JSON by `Body.PPARequest`, then returns approved, denied, or error responses based on the configured inventory. The PPA IG defines the JSON transaction and `Header.To` routing semantics, not a fixed REST path, so endpoint URLs remain configurable for external partner testing.
+- `/api/inventory` is called by the PIMS frontend via GET and PUT to view or replace the PPA inventory configuration for the running pharmacy instance.
 
 ### Frontend overview
 
@@ -31,6 +33,8 @@ The frontend environment variables are configured in `frontend/.env`:
 | ------------- | ------------- | ----------- |
 | PORT | `5050` | The port that the frontend server runs on. Change if there are conflicts with port usage. |
 | REACT_APP_PIMS_BACKEND_PORT | `5051` | The port that the backend server runs on. Must match the backend's `BACKEND_PORT` setting. |
+| REACT_APP_PIMS_BACKEND_URL | empty | Optional full backend base URL. When empty, the frontend uses `http://localhost:${REACT_APP_PIMS_BACKEND_PORT}`. |
+| VITE_CACHE_DIR | empty | Optional Vite dependency cache directory. Leave empty for Docker; the frontend derives `/tmp/pims-vite-${PORT}` so multiple PIMS instances do not share one optimizer cache. |
 
 To override defaults, either:
 - Start the app with environment variables: `PORT=5050 npm start`
@@ -43,6 +47,9 @@ The backend environment variables are configured in `backend/env.json`:
 | Variable Name | Default Value | Description |
 | ------------- | ------------- | ----------- |
 | BACKEND_PORT | `5051` | The port that the backend server runs on. Change if there are conflicts with port usage. |
+| PHARMACY_ID | `Pharmacy123` | Identifier used in NCPDP headers and PPA inventory responses for this pharmacy instance. |
+| PHARMACY_NAME | `PIMS Pharmacy A` | Display name used in PPA responses and stored NewRx metadata. |
+| PHARMACY_INVENTORY_JSON | empty | Optional JSON array that replaces the built-in PPA inventory. Docker uses this to give Pharmacy A and Pharmacy B different stock levels. |
 | ALLOWED_ORIGIN | `*` | CORS allowed origins. Specify domains that are allowed to access the backend API. |
 | MONGO_USERNAME | `pims-user` | Username for MongoDB authentication. Should match the user created during MongoDB setup. |
 | MONGO_PASSWORD | `pims-pass` | Password for MongoDB authentication. Should match the password created during MongoDB setup. |
@@ -54,9 +61,12 @@ The backend environment variables are configured in `backend/env.json`:
 | EHR_RXFILL_URL | `http://localhost:8080/test-ehr/ncpdp/script` | URL endpoint for sending RxFill messages to the EHR system. |
 | USE_INTERMEDIARY | `true` | Set to `true` to route ETASU checks through the REMS intermediary instead of directly to REMS admin. |
 | INTERMEDIARY_FHIR_URL | `http://localhost:3003/4_0_0` | Base URL of the REMS intermediary FHIR server. Used when `USE_INTERMEDIARY` is true. |
+| REMS_ADMIN_FHIR_URL | `http://localhost:8090/4_0_0` | Base FHIR URL for REMS Admin 1. |
 | REMS_ADMIN_NCPDP | `http://localhost:8090/ncpdp/script` | URL endpoint for sending NCPDP Script messages directly to REMS admin. |
+| REMS_ADMIN_2_FHIR_URL | `http://localhost:8095/4_0_0` | Base FHIR URL for REMS Admin 2. |
+| REMS_ADMIN_2_NCPDP | `http://localhost:8095/ncpdp/script` | URL endpoint for sending NCPDP Script messages directly to REMS Admin 2. |
 | INTERMEDIARY_URL | `http://localhost:3003` | Base URL of the REMS intermediary. Used when `USE_INTERMEDIARY` is true to route NCPDP Script and RxFill messages. |
-| EHR_NCPDP_URL | `http://localhost:8080/ncpdp/script` | URL endpoint for sending NCPDP Script messages directly to the EHR system. Used when `USE_INTERMEDIARY` is false. |
+| EHR_NCPDP_URL | `http://localhost:8080/test-ehr/ncpdp/script` | URL endpoint for sending NCPDP Script messages directly to the EHR system. Used when `USE_INTERMEDIARY` is false. |
 
 ## Setup
 

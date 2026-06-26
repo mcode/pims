@@ -29,6 +29,8 @@ export type DoctorOrder = {
   doctorID?: string;
   doctorEmail?: string;
   drugNames?: string;
+  drugNdcCode?: string;
+  selectedPharmacyName?: string;
   drugPrice?: number;
   quantities?: string;
   total?: number;
@@ -132,6 +134,8 @@ const OrderCard = (props: { tabStatus: TabStatus }) => {
                     <TableHead sx={{ fontWeight: 'bold' }}>
                       <TableRow sx={{ fontWeight: 'bold' }}>
                         <TableCell align="left">Dispense Status</TableCell>
+                        <TableCell align="right">NDC</TableCell>
+                        <TableCell align="right">Pharmacy</TableCell>
                         <TableCell align="right">Quantities</TableCell>
                         <TableCell align="right">Drug Price</TableCell>
                         <TableCell align="right">Total</TableCell>
@@ -145,6 +149,8 @@ const OrderCard = (props: { tabStatus: TabStatus }) => {
                     <TableBody>
                       <TableRow>
                         <TableCell align="left">{row.dispenseStatus}</TableCell>
+                        <TableCell align="right">{row.drugNdcCode || 'N/A'}</TableCell>
+                        <TableCell align="right">{row.selectedPharmacyName || 'N/A'}</TableCell>
                         <TableCell align="right">{row.quantities}</TableCell>
                         <TableCell align="right">{row.drugPrice}</TableCell>
                         <TableCell align="right">{row.total}</TableCell>

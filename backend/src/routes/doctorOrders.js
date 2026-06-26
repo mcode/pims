@@ -17,6 +17,7 @@ import {
 import { NewRx } from '../database/schemas/newRx.js';
 import { medicationRequestToRemsAdmins } from '../database/data.js';
 import { getConfig, updateConfig, getNCPDPEndpoint, getRxFillEndpoint } from '../lib/pharmacyConfig.js';
+import { getInventory, updateInventory } from '../lib/ppaInventory.js';
 
 bpx(bodyParser);
 router.use(
@@ -345,9 +346,8 @@ router.delete('/api/deleteAll', async (req, res) => {
   res.send([]);
 });
 
-const isRemsDrug = order => {
-  console.log(order);
-  return medicationRequestToRemsAdmins.some(entry => {
+const getRemsDrugConfig = order => {
+  return medicationRequestToRemsAdmins.find(entry => {
     if (order.drugNdcCode && entry.ndc) {
       return order.drugNdcCode === entry.ndc;
     }
@@ -358,6 +358,20 @@ const isRemsDrug = order => {
 
     return false;
   });
+};
+
+const isRemsDrug = order => {
+  console.log(order);
+  return Boolean(getRemsDrugConfig(order));
+};
+
+const getNcpdpEndpointForOrder = order => {
+  if (getConfig().useIntermediary) {
+    return getNCPDPEndpoint();
+  }
+
+  const remsDrug = getRemsDrugConfig(order);
+  return remsDrug?.remsAdminNcpdpUrl || env.REMS_ADMIN_NCPDP;
 };
 
 
@@ -371,17 +385,7 @@ const getEtasuUrl = order => {
   if (getConfig().useIntermediary) {
     baseUrl = env.INTERMEDIARY_FHIR_URL;
   } else {
-    const remsDrug = medicationRequestToRemsAdmins.find(entry => {
-      if (order.drugNdcCode && entry.ndc) {
-        return order.drugNdcCode === entry.ndc;
-      }
-
-      if (order.drugRxnormCode && entry.rxnorm) {
-        return Number(order.drugRxnormCode) === Number(entry.rxnorm);
-      }
-
-      return false;
-    });
+    const remsDrug = getRemsDrugConfig(order);
     baseUrl = remsDrug?.remsAdminFhirUrl;
   }
 
@@ -400,19 +404,7 @@ const getGuidanceResponse = async order => {
     return null;
   }
 
-  // Make the etasu call with the case number if it exists, if not call with patient and medication
-  let body = {};
-  if (order.caseNumber && !getConfig().useIntermediary) {
-    body = {
-      resourceType: 'Parameters',
-      parameter: [
-        {
-          name: 'caseNumber',
-          valueString: order.caseNumber
-        }
-      ]
-    };
-  } else {
+  const buildMedicationParameter = () => {
     let medicationCoding = [];
 
     if (order.drugNdcCode) {
@@ -430,9 +422,7 @@ const getGuidanceResponse = async order => {
         display: order.drugNames
       });
     } else {
-      const remsDrug = medicationRequestToRemsAdmins.find(entry => {
-        return order.drugNdcCode && entry.ndc && order.drugNdcCode === entry.ndc;
-      });
+      const remsDrug = getRemsDrugConfig(order);
 
       if (remsDrug && remsDrug.rxnorm) {
         medicationCoding.push({
@@ -443,37 +433,56 @@ const getGuidanceResponse = async order => {
       }
     }
 
-    body = {
-      resourceType: 'Parameters',
-      parameter: [
-        {
-          name: 'patient',
-          resource: {
-            resourceType: 'Patient',
-            id: order.prescriberOrderNumber,
-            name: [
-              {
-                family: order.patientLastName,
-                given: order.patientName.split(' '),
-                use: 'official'
-              }
-            ],
-            birthDate: order.patientDOB
-          }
-        },
-        {
-          name: 'medication',
-          resource: {
-            resourceType: 'Medication',
-            id: order.prescriberOrderNumber,
-            code: {
-              coding: medicationCoding
-            }
-          }
+    return {
+      name: 'medication',
+      resource: {
+        resourceType: 'Medication',
+        id: order.prescriberOrderNumber,
+        code: {
+          coding: medicationCoding
         }
-      ]
+      }
     };
+  };
+
+  const buildPatientParameter = () => {
+    const patientId = `${order.patientFirstName || 'patient'}-${order.patientLastName || ''}-${order.patientDOB || ''}`
+      .replace(/[^A-Za-z0-9-.]/g, '-')
+      .replace(/-+/g, '-');
+
+    return {
+      name: 'patient',
+      resource: {
+        resourceType: 'Patient',
+        id: patientId,
+        name: [
+          {
+            family: order.patientLastName,
+            given: [order.patientFirstName].filter(Boolean),
+            use: 'official'
+          }
+        ],
+        birthDate: order.patientDOB
+      }
+    };
+  };
+
+  let parameters = [];
+  if (order.caseNumber) {
+    parameters.push({
+      name: 'caseNumber',
+      valueString: order.caseNumber
+    });
   }
+
+  if (!order.caseNumber || getConfig().useIntermediary) {
+    parameters.push(buildPatientParameter(), buildMedicationParameter());
+  }
+
+  const body = {
+    resourceType: 'Parameters',
+    parameter: parameters
+  };
 
   try {
     const response = await axios.post(etasuUrl, body, {
@@ -528,7 +537,7 @@ const sendRxFill = async (newRx, prescriberOrderNumber, dispensed, note) => {
     const order = await doctorOrder.findOne({ prescriberOrderNumber });
     if (isRemsDrug(order)) {
       const rxFillRems = buildRxFill(newRx, false, dispensed, note);
-      endpoint = env.REMS_ADMIN_NCPDP;
+      endpoint = getNcpdpEndpointForOrder(order);
 
       if (useIntermediary) {
         endpoint = getRxFillEndpoint();
@@ -571,7 +580,7 @@ const sendREMSInitiationRequest = async order => {
 
     console.log(initiationRequest);
 
-    const endpoint = getNCPDPEndpoint();
+    const endpoint = getNcpdpEndpointForOrder(order);
     console.log(`Sending REMSInitiationRequest to: ${endpoint}`);
     
     const response = await axios.post(
@@ -622,7 +631,7 @@ const sendREMSRequest = async order => {
     console.log('Sending REMSRequest to REMS Admin for case:', order.caseNumber);
     console.log(remsRequest);
 
-    const endpoint = getNCPDPEndpoint();
+    const endpoint = getNcpdpEndpointForOrder(order);
     console.log(`Sending REMSRequest to: ${endpoint}`);
     
     const response = await axios.post(
@@ -815,6 +824,8 @@ async function parseNCPDPScript(newRx) {
       medicationPrescribed.DrugCoded.ProductCode?.Code || medicationPrescribed.DrugCoded.NDC || null,
 
     drugRxnormCode: medicationPrescribed.DrugCoded.DrugDBCode?.Code || null,
+    selectedPharmacyId: newRx.Message.Header.To?._ || newRx.Message.Header.To,
+    selectedPharmacyName: env.PHARMACY_NAME || newRx.Message.Header.To?._ || newRx.Message.Header.To,
 
     rxDate: medicationPrescribed.WrittenDate.Date,
     drugPrice: 200,
@@ -852,6 +863,29 @@ router.post('/api/config', async (req, res) => {
   const newConfig = updateConfig(req.body);
   console.log('Configuration updated:', newConfig);
   res.json(newConfig);
+});
+
+/**
+ * Route: 'doctorOrders/api/inventory'
+ * Description: Get current PPA inventory configuration for this pharmacy.
+ */
+router.get('/api/inventory', async (_req, res) => {
+  res.json(getInventory());
+});
+
+/**
+ * Route: 'doctorOrders/api/inventory'
+ * Description: Replace current PPA inventory configuration for this pharmacy.
+ */
+router.patch('/api/inventory', async (req, res) => {
+  try {
+    const payload = Array.isArray(req.body) ? req.body : req.body?.inventory;
+    const nextInventory = updateInventory(payload);
+    res.json(nextInventory);
+  } catch (error) {
+    console.log('Failed to update inventory:', error.message);
+    res.status(400).json({ error: error.message });
+  }
 });
 
 

@@ -210,11 +210,12 @@ export const buildREMSInitiationRequest = newRx => {
   const ndcCode =
     drugCoded?.NDC || drugCoded?.ProductCode?.Code;
   const humanPatient = Body.NewRx.Patient.HumanPatient;
+  const patientNames = humanPatient.Names || (humanPatient.Name ? { Name: humanPatient.Name } : undefined);
   const patient = {
     HumanPatient: {
       Identification: {},  
-      Names: humanPatient.Names,
-      GenderAndSex: humanPatient.GenderAndSex,
+      Names: patientNames,
+      GenderAndSex: humanPatient.GenderAndSex || humanPatient.Gender,
       DateOfBirth: humanPatient.DateOfBirth,
       Address: humanPatient.Address
     }
