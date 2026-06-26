@@ -21,6 +21,8 @@ export const orderSchema = new mongoose.Schema({
   drugPrice: Number,
   drugNdcCode: String,
   drugRxnormCode: String,
+  selectedPharmacyId: String,
+  selectedPharmacyName: String,
   quantities: String,
   total: Number,
   pickupDate: String,
