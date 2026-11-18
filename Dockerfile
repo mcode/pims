@@ -1,10 +1,12 @@
-FROM node:18-alpine
+FROM node:24-alpine
 
 WORKDIR /home/node/app
 COPY --chown=node:node . .
 
 WORKDIR /home/node/app/backend
-RUN npm install
+RUN apk upgrade --no-cache zlib \
+    && npm install --global npm@11.21.2 \
+    && npm install
 
 WORKDIR /home/node/app/frontend
 RUN npm install
