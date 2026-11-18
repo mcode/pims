@@ -15,7 +15,7 @@ jobs:
           clean: true
       - uses: actions/setup-node@v1
         with:
-          node-version: "21.x"
+          node-version: "24.x"
       - run: npm install
       - run: npm run lint
       - run: npm run prettier
@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: "21.x"
+          node-version: "24.x"
       - run: npm install
       - run: npm run lint
       - run: npm run prettier
@@ -46,7 +46,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [21]
+        node-version: [24]
 
     steps:
       - uses: actions/checkout@v1
@@ -68,7 +68,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [21]
+        node-version: [24]
 
     steps:
       - uses: actions/checkout@v1
